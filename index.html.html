@@ -1,0 +1,2184 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>TRAMA Studio — Panel de gestión</title>
+
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400;1,500&family=Mrs+Saint+Delafield&display=swap" rel="stylesheet">
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.4/dist/chart.umd.min.js"></script>
+
+<style>
+/* =========================================================
+   TRAMA STUDIO — Identidad visual
+   Negro profundo / blanco cálido / rosa pastel / grises
+   Times New Roman (editorial) + Raleway (funcional) + script (decorativo)
+========================================================= */
+:root{
+  --negro:#0a0a0a;
+  --negro-suave:#141414;
+  --blanco:#fdfcfb;
+  --blanco-puro:#ffffff;
+  --rosa:#f6cfd6;
+  --rosa-fuerte:#ecb6c1;
+  --rosa-suave:#fbe8ec;
+  --gris:#8a8580;
+  --gris-claro:#e8e5e1;
+  --gris-linea:#e2ddd8;
+  --texto:#1c1a19;
+  --editorial:'Times New Roman', 'Playfair Display', Georgia, serif;
+  --funcional:'Raleway', sans-serif;
+  --script:'Mrs Saint Delafield', cursive;
+  --radio:2px;
+  --sombra:0 1px 3px rgba(0,0,0,0.06);
+  --transicion:180ms ease;
+}
+
+*{box-sizing:border-box; margin:0; padding:0;}
+html{scroll-behavior:smooth;}
+body{
+  font-family:var(--funcional);
+  color:var(--texto);
+  background:var(--blanco);
+  font-weight:400;
+  -webkit-font-smoothing:antialiased;
+  letter-spacing:0.01em;
+}
+h1,h2,h3,.editorial{font-family:var(--editorial); font-weight:400; letter-spacing:0;}
+.script{font-family:var(--script); font-weight:400; letter-spacing:0.02em;}
+button{font-family:var(--funcional); cursor:pointer;}
+input,select,textarea{font-family:var(--funcional);}
+a{color:inherit;}
+::selection{background:var(--rosa); color:var(--negro);}
+
+/* ---------- Scrollbar ---------- */
+::-webkit-scrollbar{width:8px; height:8px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--gris-claro); border-radius:4px;}
+::-webkit-scrollbar-thumb:hover{background:var(--gris);}
+
+/* ---------- Layout general ---------- */
+#app{display:flex; min-height:100vh;}
+
+/* ---------- Sidebar ---------- */
+.sidebar{
+  width:236px; flex-shrink:0; background:var(--negro); color:var(--blanco-puro);
+  display:flex; flex-direction:column; position:sticky; top:0; height:100vh;
+  transition:width var(--transicion);
+  z-index:40;
+}
+.sidebar.colapsada{width:72px;}
+.sidebar-logo{
+  padding:28px 22px 22px 22px; display:flex; align-items:center; gap:10px; border-bottom:1px solid rgba(255,255,255,0.08);
+  min-height:76px;
+}
+.logo-mark{display:flex; align-items:baseline; gap:2px; font-size:1.5rem; white-space:nowrap; overflow:hidden;}
+.logo-mark .t1{font-family:var(--editorial); font-style:italic; color:#fff;}
+.logo-mark .t2{font-family:var(--funcional); font-weight:700; color:var(--rosa); font-size:0.92em;}
+.logo-img{max-height:34px; max-width:170px; object-fit:contain;}
+.sidebar.colapsada .logo-mark span:not(.t1){display:none;}
+.sidebar.colapsada .logo-mark{font-size:1.3rem;}
+
+.sidebar-toggle{
+  background:none; border:none; color:var(--gris); padding:10px 22px; text-align:left; font-size:0.72rem;
+  letter-spacing:0.08em; text-transform:uppercase; display:flex; align-items:center; gap:8px;
+}
+.sidebar-toggle:hover{color:#fff;}
+
+nav.menu{flex:1; overflow-y:auto; padding:8px 0 16px 0;}
+.menu-item{
+  display:flex; align-items:center; gap:13px; padding:11px 22px; color:rgba(255,255,255,0.62);
+  font-size:0.86rem; letter-spacing:0.015em; border-left:2px solid transparent; transition:all var(--transicion);
+  white-space:nowrap; overflow:hidden;
+}
+.menu-item svg{width:17px; height:17px; flex-shrink:0;}
+.menu-item:hover{color:#fff; background:rgba(255,255,255,0.04);}
+.menu-item.activo{color:#fff; border-left-color:var(--rosa); background:rgba(246,207,214,0.08);}
+.sidebar.colapsada .menu-item span.label{display:none;}
+.sidebar.colapsada .menu-item{justify-content:center; padding:11px 0;}
+
+.sidebar-footer{padding:16px 22px; border-top:1px solid rgba(255,255,255,0.08); font-size:0.7rem; color:var(--gris);}
+.sidebar.colapsada .sidebar-footer{display:none;}
+
+/* ---------- Contenido ---------- */
+.contenido{flex:1; min-width:0; display:flex; flex-direction:column;}
+
+/* ---------- Header ---------- */
+.topbar{
+  background:var(--blanco-puro); border-bottom:1px solid var(--gris-linea); padding:14px 32px;
+  display:flex; align-items:center; gap:18px; position:sticky; top:0; z-index:30; flex-wrap:wrap;
+}
+.topbar .fecha-actual{font-size:0.78rem; color:var(--gris); white-space:nowrap;}
+.buscador-global{
+  flex:1; min-width:160px; max-width:340px; position:relative;
+}
+.buscador-global input{
+  width:100%; padding:8px 12px 8px 34px; border:1px solid var(--gris-linea); border-radius:var(--radio);
+  font-size:0.82rem; background:var(--blanco);
+}
+.buscador-global input:focus{outline:none; border-color:var(--rosa-fuerte);}
+.buscador-global svg{position:absolute; left:10px; top:50%; transform:translateY(-50%); width:14px; height:14px; color:var(--gris);}
+.estado-guardado{font-size:0.72rem; color:var(--gris); display:flex; align-items:center; gap:6px; white-space:nowrap;}
+.estado-guardado .punto{width:6px; height:6px; border-radius:50%; background:#7ea87e;}
+.estado-guardado.guardando .punto{background:var(--rosa-fuerte); animation:pulso 1s infinite;}
+.estado-guardado.error .punto{background:#c0524a;}
+.estado-guardado.pendiente .punto{background:#c9899a;}
+@keyframes pulso{0%,100%{opacity:1;}50%{opacity:0.3;}}
+
+.btn{
+  border:1px solid var(--negro); background:var(--negro); color:#fff; padding:8px 16px; border-radius:var(--radio);
+  font-size:0.78rem; letter-spacing:0.02em; display:inline-flex; align-items:center; gap:6px; transition:all var(--transicion);
+  white-space:nowrap;
+}
+.btn:hover{background:#000; opacity:0.85;}
+.btn svg{width:14px; height:14px;}
+.btn.rosa{background:var(--rosa); border-color:var(--rosa); color:var(--negro);}
+.btn.rosa:hover{background:var(--rosa-fuerte);}
+.btn.outline{background:transparent; color:var(--negro); border-color:var(--negro);}
+.btn.outline:hover{background:var(--negro); color:#fff;}
+.btn.chico{padding:5px 11px; font-size:0.72rem;}
+.btn.peligro{background:transparent; color:#a83e37; border-color:#a83e37;}
+.btn.peligro:hover{background:#a83e37; color:#fff;}
+.btn:disabled{opacity:0.4; cursor:not-allowed;}
+.icon-btn{
+  width:34px; height:34px; border-radius:var(--radio); border:1px solid var(--gris-linea); background:#fff;
+  display:flex; align-items:center; justify-content:center; color:var(--texto); position:relative; flex-shrink:0;
+}
+.icon-btn:hover{border-color:var(--rosa-fuerte); background:var(--rosa-suave);}
+.icon-btn svg{width:16px; height:16px;}
+
+.menu-nuevo{position:relative;}
+.dropdown-nuevo{
+  position:absolute; right:0; top:calc(100% + 8px); background:#fff; border:1px solid var(--gris-linea);
+  border-radius:var(--radio); box-shadow:0 8px 24px rgba(0,0,0,0.12); min-width:200px; z-index:100; display:none; overflow:hidden;
+}
+.dropdown-nuevo.abierto{display:block;}
+.dropdown-nuevo button{
+  width:100%; text-align:left; padding:10px 16px; background:none; border:none; font-size:0.8rem; display:flex; align-items:center; gap:9px;
+}
+.dropdown-nuevo button:hover{background:var(--rosa-suave);}
+.dropdown-nuevo button svg{width:14px; height:14px; color:var(--gris);}
+
+/* ---------- Zona de página ---------- */
+.pagina{padding:30px 32px 60px 32px; max-width:1360px; width:100%;}
+.pagina-header{display:flex; align-items:flex-end; justify-content:space-between; gap:16px; margin-bottom:26px; flex-wrap:wrap;}
+.pagina-header h1{font-size:2rem; font-weight:400;}
+.pagina-header .sub{color:var(--gris); font-size:0.85rem; margin-top:4px;}
+.pagina-acciones{display:flex; gap:10px; flex-wrap:wrap; align-items:center;}
+
+.saludo-inicio{margin-bottom:32px;}
+.saludo-inicio h1{font-size:2.4rem; font-style:italic;}
+.saludo-inicio p{color:var(--gris); margin-top:6px; font-size:0.92rem;}
+
+/* ---------- Grid de tarjetas ---------- */
+.grid-cards{display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:14px; margin-bottom:30px;}
+.card{
+  background:#fff; border:1px solid var(--gris-linea); border-radius:var(--radio); padding:18px 18px 16px 18px;
+  box-shadow:var(--sombra);
+}
+.card .etiqueta{font-size:0.68rem; text-transform:uppercase; letter-spacing:0.08em; color:var(--gris); margin-bottom:8px;}
+.card .valor{font-family:var(--editorial); font-size:1.7rem;}
+.card .valor.rosa-texto{color:#c9899a;}
+.card .delta{font-size:0.72rem; margin-top:6px; color:var(--gris);}
+.card.negro{background:var(--negro); color:#fff; border-color:var(--negro);}
+.card.negro .etiqueta{color:rgba(255,255,255,0.55);}
+.card.acento{border-color:var(--rosa-fuerte); background:var(--rosa-suave);}
+
+.grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:20px; margin-bottom:28px;}
+.grid-3col{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
+@media(max-width:1000px){.grid-2{grid-template-columns:1fr;} .grid-3col{grid-template-columns:1fr;}}
+
+.panel{background:#fff; border:1px solid var(--gris-linea); border-radius:var(--radio); padding:20px 22px; box-shadow:var(--sombra);}
+.panel h3{font-size:1.05rem; margin-bottom:14px; font-weight:400;}
+.panel h3 .script{font-size:1.3em; color:var(--gris);}
+
+.lista-simple{display:flex; flex-direction:column; gap:0;}
+.lista-simple li, .fila-lista{
+  display:flex; justify-content:space-between; align-items:center; padding:9px 0; border-bottom:1px solid var(--gris-linea);
+  font-size:0.83rem; gap:10px; list-style:none;
+}
+.lista-simple li:last-child, .fila-lista:last-child{border-bottom:none;}
+.fila-lista .nombre{font-weight:500;}
+.fila-lista .detalle{color:var(--gris); font-size:0.76rem;}
+.pill{font-size:0.66rem; padding:3px 9px; border-radius:20px; letter-spacing:0.03em; white-space:nowrap; text-transform:uppercase; font-weight:600;}
+.pill.vencido{background:#f6d9d6; color:#a1352d;}
+.pill.pendiente{background:var(--gris-claro); color:#6b665f;}
+.pill.cobrado, .pill.activo, .pill.aprobado, .pill.finalizada, .pill.ganado{background:#dcebd9; color:#4d7a48;}
+.pill.parcial, .pill.enviado, .pill.enproceso{background:var(--rosa); color:#8a4f5c;}
+.pill.pausado, .pill.borrador{background:var(--gris-claro); color:#6b665f;}
+.pill.potencial, .pill.retomar{background:#efe4d0; color:#8a6a2f;}
+.pill.rechazado, .pill.noInteresado{background:#f0e4e4; color:#8a3f3f;}
+.pill.alta,.pill.urgente{background:#f6d9d6; color:#a1352d;}
+.pill.media{background:#faeed0; color:#8a6a2f;}
+.pill.baja{background:#dcebd9; color:#4d7a48;}
+
+.estado-vacio{
+  text-align:center; padding:40px 20px; color:var(--gris);
+}
+.estado-vacio .icono{margin-bottom:10px; opacity:0.4;}
+.estado-vacio p{font-size:0.85rem;}
+.estado-vacio .script{display:block; font-size:1.6rem; color:var(--rosa-fuerte); margin-bottom:6px;}
+
+/* ---------- Filtros / toolbar ---------- */
+.toolbar{display:flex; gap:10px; flex-wrap:wrap; align-items:center; margin-bottom:18px;}
+.toolbar input[type=text], .toolbar input[type=search]{
+  padding:8px 12px; border:1px solid var(--gris-linea); border-radius:var(--radio); font-size:0.8rem; min-width:180px;
+}
+.toolbar select{padding:8px 10px; border:1px solid var(--gris-linea); border-radius:var(--radio); font-size:0.8rem; background:#fff;}
+.toolbar input:focus, .toolbar select:focus{outline:none; border-color:var(--rosa-fuerte);}
+.vista-toggle{display:flex; border:1px solid var(--gris-linea); border-radius:var(--radio); overflow:hidden; margin-left:auto;}
+.vista-toggle button{padding:7px 13px; background:#fff; border:none; font-size:0.75rem; color:var(--gris); border-right:1px solid var(--gris-linea);}
+.vista-toggle button:last-child{border-right:none;}
+.vista-toggle button.activo{background:var(--negro); color:#fff;}
+
+/* ---------- Tablas ---------- */
+.tabla-wrap{overflow-x:auto; border:1px solid var(--gris-linea); border-radius:var(--radio); background:#fff;}
+table{width:100%; border-collapse:collapse; font-size:0.82rem;}
+thead th{
+  text-align:left; padding:11px 14px; background:var(--negro); color:#fff; font-weight:500; font-size:0.7rem;
+  text-transform:uppercase; letter-spacing:0.06em; white-space:nowrap; cursor:pointer; user-select:none;
+}
+thead th:hover{color:var(--rosa);}
+tbody td{padding:11px 14px; border-bottom:1px solid var(--gris-linea); vertical-align:middle;}
+tbody tr:hover{background:var(--rosa-suave);}
+tbody tr:last-child td{border-bottom:none;}
+.acciones-fila{display:flex; gap:6px;}
+.acciones-fila button{
+  border:none; background:none; padding:4px; color:var(--gris); border-radius:var(--radio);
+}
+.acciones-fila button:hover{color:var(--negro); background:var(--gris-claro);}
+.acciones-fila svg{width:15px; height:15px;}
+
+/* ---------- Kanban ---------- */
+.kanban{display:flex; gap:14px; overflow-x:auto; padding-bottom:14px;}
+.kanban-col{
+  background:var(--rosa-suave); border-radius:var(--radio); min-width:250px; width:250px; flex-shrink:0; padding:12px;
+  display:flex; flex-direction:column; max-height:74vh;
+}
+.kanban-col h4{font-size:0.72rem; text-transform:uppercase; letter-spacing:0.06em; color:var(--gris); margin-bottom:10px; display:flex; justify-content:space-between;}
+.kanban-cards{flex:1; overflow-y:auto; display:flex; flex-direction:column; gap:8px;}
+.kanban-card{
+  background:#fff; border:1px solid var(--gris-linea); border-radius:var(--radio); padding:11px 12px; font-size:0.78rem;
+  cursor:grab; box-shadow:var(--sombra);
+}
+.kanban-card:active{cursor:grabbing;}
+.kanban-card.arrastrando{opacity:0.4;}
+.kanban-card .titulo-card{font-weight:600; margin-bottom:4px;}
+.kanban-card .meta-card{color:var(--gris); font-size:0.72rem; display:flex; justify-content:space-between; margin-top:6px;}
+.kanban-col.sobre{outline:2px dashed var(--rosa-fuerte);}
+
+/* ---------- Modal ---------- */
+.overlay{
+  position:fixed; inset:0; background:rgba(10,10,10,0.55); display:none; align-items:flex-start; justify-content:center;
+  z-index:200; padding:40px 16px; overflow-y:auto;
+}
+.overlay.abierto{display:flex;}
+.modal{
+  background:#fff; width:100%; max-width:640px; border-radius:var(--radio); box-shadow:0 20px 60px rgba(0,0,0,0.3);
+  animation:aparecer 160ms ease;
+}
+.modal.ancho{max-width:920px;}
+@keyframes aparecer{from{opacity:0; transform:translateY(-8px);} to{opacity:1; transform:translateY(0);}}
+.modal-header{display:flex; justify-content:space-between; align-items:center; padding:20px 24px; border-bottom:1px solid var(--gris-linea);}
+.modal-header h2{font-size:1.25rem; font-weight:400;}
+.modal-cerrar{background:none; border:none; color:var(--gris); padding:4px;}
+.modal-cerrar:hover{color:var(--negro);}
+.modal-body{padding:22px 24px; max-height:70vh; overflow-y:auto;}
+.modal-footer{padding:16px 24px; border-top:1px solid var(--gris-linea); display:flex; justify-content:flex-end; gap:10px;}
+
+.campo{margin-bottom:15px;}
+.campo label{display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--gris); margin-bottom:6px;}
+.campo label .req{color:#a1352d;}
+.campo input, .campo select, .campo textarea{
+  width:100%; padding:9px 12px; border:1px solid var(--gris-linea); border-radius:var(--radio); font-size:0.85rem; background:#fff;
+}
+.campo input:focus, .campo select:focus, .campo textarea:focus{outline:none; border-color:var(--rosa-fuerte); background:#fff;}
+.campo textarea{resize:vertical; min-height:70px;}
+.campo.error input, .campo.error select, .campo.error textarea{border-color:#a1352d;}
+.campo .msg-error{color:#a1352d; font-size:0.7rem; margin-top:4px; display:none;}
+.campo.error .msg-error{display:block;}
+.fila-campos{display:grid; grid-template-columns:1fr 1fr; gap:14px;}
+.fila-campos.tres{grid-template-columns:1fr 1fr 1fr;}
+@media(max-width:600px){.fila-campos, .fila-campos.tres{grid-template-columns:1fr;}}
+
+/* ---------- Toast ---------- */
+.toasts{position:fixed; bottom:22px; right:22px; z-index:400; display:flex; flex-direction:column; gap:10px; max-width:320px;}
+.toast{
+  background:var(--negro); color:#fff; padding:13px 18px; border-radius:var(--radio); font-size:0.8rem; box-shadow:0 8px 24px rgba(0,0,0,0.25);
+  display:flex; align-items:center; gap:10px; animation:entrar-toast 220ms ease;
+  border-left:3px solid var(--rosa);
+}
+.toast.exito{border-left-color:#7ea87e;}
+.toast.error{border-left-color:#c0524a;}
+@keyframes entrar-toast{from{opacity:0; transform:translateX(20px);} to{opacity:1; transform:translateX(0);}}
+
+/* ---------- Ficha lateral cliente ---------- */
+.ficha-tabs{display:flex; gap:2px; border-bottom:1px solid var(--gris-linea); margin-bottom:16px; flex-wrap:wrap;}
+.ficha-tabs button{padding:9px 14px; background:none; border:none; font-size:0.76rem; color:var(--gris); border-bottom:2px solid transparent;}
+.ficha-tabs button.activo{color:var(--negro); border-bottom-color:var(--rosa-fuerte); font-weight:600;}
+
+/* ---------- Presupuesto imprimible ---------- */
+.hoja-presupuesto{background:#fff; padding:40px; border:1px solid var(--gris-linea);}
+.hoja-presupuesto .logo-presu{margin-bottom:30px;}
+.hoja-presupuesto table{margin:18px 0;}
+.hoja-presupuesto thead th{background:var(--negro);}
+.total-final{text-align:right; font-family:var(--editorial); font-size:1.5rem; margin-top:10px;}
+
+/* ---------- Config ---------- */
+.subseccion{margin-bottom:34px;}
+.subseccion h3{font-size:1.05rem; margin-bottom:14px; padding-bottom:8px; border-bottom:1px solid var(--gris-linea);}
+.logo-preview{
+  width:220px; height:90px; background:var(--negro); border-radius:var(--radio); display:flex; align-items:center; justify-content:center;
+  margin-bottom:12px; overflow:hidden;
+}
+.logo-preview img{max-width:90%; max-height:80%; object-fit:contain;}
+.backup-item{display:flex; justify-content:space-between; align-items:center; padding:10px 0; border-bottom:1px solid var(--gris-linea); font-size:0.8rem;}
+.backup-item:last-child{border-bottom:none;}
+
+/* ---------- Toggle menu mobile ---------- */
+.menu-mobile-btn{display:none; background:none; border:none; padding:6px;}
+@media(max-width:880px){
+  .sidebar{position:fixed; left:-236px; top:0; height:100vh; transition:left var(--transicion);}
+  .sidebar.abierta{left:0;}
+  .sidebar.colapsada{width:236px;}
+  .menu-mobile-btn{display:flex;}
+  .contenido{width:100%;}
+  .pagina{padding:20px 16px 50px 16px;}
+  .grid-2{grid-template-columns:1fr;}
+  .topbar{padding:12px 16px;}
+  .topbar .fecha-actual{display:none;}
+}
+.fondo-mobile{display:none; position:fixed; inset:0; background:rgba(0,0,0,0.4); z-index:35;}
+.fondo-mobile.activo{display:block;}
+
+.checklist-item{display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.82rem;}
+.checklist-item input{width:auto;}
+
+.oculto{display:none !important;}
+.texto-gris{color:var(--gris);}
+.mt-16{margin-top:16px;}
+.mb-16{margin-bottom:16px;}
+hr.linea{border:none; border-top:1px solid var(--gris-linea); margin:20px 0;}
+</style>
+</head>
+<body>
+
+<div class="fondo-mobile" id="fondoMobile"></div>
+
+<div id="app">
+  <!-- ================= SIDEBAR ================= -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-logo" id="sidebarLogo">
+      <span class="logo-mark" id="logoMarkSidebar"><span class="t1">trama</span><span class="t2">studio</span></span>
+    </div>
+    <button class="sidebar-toggle" id="btnColapsar" title="Contraer menú">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+      <span class="label-toggle">Contraer</span>
+    </button>
+    <nav class="menu" id="menuNav"></nav>
+    <div class="sidebar-footer">TRAMA Studio<br>Panel de gestión v1.0</div>
+  </aside>
+
+  <!-- ================= CONTENIDO ================= -->
+  <div class="contenido">
+    <header class="topbar">
+      <button class="menu-mobile-btn icon-btn" id="btnMenuMobile">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h18M3 6h18M3 18h18"/></svg>
+      </button>
+      <span class="fecha-actual" id="fechaActual"></span>
+      <div class="buscador-global">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="search" id="buscadorGlobal" placeholder="Buscar clientes, tareas, presupuestos…">
+      </div>
+      <span class="estado-guardado guardando" id="estadoGuardado"><span class="punto"></span><span id="textoEstadoGuardado">Todos los cambios fueron guardados</span></span>
+      <div class="menu-nuevo">
+        <button class="btn rosa" id="btnNuevo">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 5v14M5 12h14"/></svg>
+          Nuevo
+        </button>
+        <div class="dropdown-nuevo" id="dropdownNuevo"></div>
+      </div>
+      <button class="btn outline" id="btnGuardarManual">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 21H5a2 2 0 01-2-2V5a2 2 0 012-2h11l5 5v11a2 2 0 01-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/></svg>
+        Guardar cambios
+      </button>
+    </header>
+
+    <main class="pagina" id="pagina"></main>
+  </div>
+</div>
+
+<div class="overlay" id="overlay">
+  <div class="modal" id="modalBox">
+    <div class="modal-header">
+      <h2 id="modalTitulo">Título</h2>
+      <button class="modal-cerrar" id="btnCerrarModal">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="20" height="20"><path d="M18 6L6 18M6 6l12 12"/></svg>
+      </button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+    <div class="modal-footer" id="modalFooter"></div>
+  </div>
+</div>
+
+<div class="toasts" id="toasts"></div>
+
+<script>
+'use strict';
+/* =========================================================================
+   TRAMA STUDIO — PANEL DE GESTIÓN
+   Aplicación de una sola página, pensada para abrir directamente en el navegador.
+   Sin autoguardado: los datos viven en memoria mientras la pestaña está abierta.
+   El respaldo es manual, exportando/importando un archivo JSON.
+========================================================================= */
+
+/* ---------------------------------------------------------------------
+   1. UTILIDADES GENERALES
+--------------------------------------------------------------------- */
+function descargarJSON(data, nombreArchivo){
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = nombreArchivo; a.click();
+  URL.revokeObjectURL(url);
+}
+
+function uid(prefix){ return (prefix||'id') + '_' + Date.now().toString(36) + Math.random().toString(36).slice(2,8); }
+function hoy(){ return new Date().toISOString().slice(0,10); }
+function fechaHoraStr(){
+  const d = new Date();
+  return d.toLocaleDateString('es-AR') + ' ' + d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+}
+function fechaVista(iso){
+  if(!iso) return '—';
+  const [y,m,d] = iso.split('-');
+  if(!y||!m||!d) return iso;
+  return `${d}/${m}/${y}`;
+}
+function moneda(n){
+  n = Number(n)||0;
+  return '$' + n.toLocaleString('es-AR',{minimumFractionDigits:0, maximumFractionDigits:0});
+}
+function escapeHTML(str){
+  if(str===undefined||str===null) return '';
+  return String(str).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+}
+function diasEntre(iso){
+  if(!iso) return null;
+  const hoyD = new Date(hoy()); const otro = new Date(iso);
+  return Math.round((otro - hoyD)/86400000);
+}
+function debounce(fn, ms){
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(()=>fn(...args), ms); };
+}
+
+/* ---------------------------------------------------------------------
+   2. ESTADO / DATOS DE EJEMPLO
+--------------------------------------------------------------------- */
+function datosDeEjemplo(){
+  return {
+    version: 1,
+    config: {
+      nombreAgencia:'TRAMA Studio',
+      responsable:'Oriana',
+      correo:'hola@tramastudio.com',
+      telefono:'+54 9 11 0000-0000',
+      instagram:'@tramastudio',
+      sitioweb:'www.tramastudio.com',
+      moneda:'ARS',
+      logoBase64:'',
+      valorHora:6000,
+      costosFijos:350000,
+      objetivoRentabilidad:35,
+      condicionesPresupuesto:'50% al confirmar el trabajo, 50% contra entrega. Los valores no incluyen gastos de producción externos (locación, catering, alquiler de vestuario) salvo aclaración expresa.',
+      metodosPago:'Transferencia bancaria, Mercado Pago',
+    },
+    clientes: [
+      {id:uid('cli'), marca:'ROOT en La Casona', contacto:'Julieta Fernández', rubro:'Gastronomía', email:'julieta@rootlc.com', telefono:'+54 9 11 4444-1111', instagram:'@rootenlacasona', sitioweb:'', fechaInicio:'2024-02-01', estado:'activo', servicios:'Manejo integral de redes, Producción de fotos', valorMensual:280000, diaPago:10, formaPago:'Transferencia', proximoAjuste:'2026-08-01', frecuenciaAjuste:'Semestral', notas:'Cliente fundador de la agencia. Muy colaborativo con las producciones.', drive:'', canva:'', ig:'https://instagram.com/rootenlacasona'},
+      {id:uid('cli'), marca:'Müller', contacto:'Tomás Müller', rubro:'Moda', email:'tomas@muller.com.ar', telefono:'+54 9 11 4444-2222', instagram:'@muller.oficial', sitioweb:'www.muller.com.ar', fechaInicio:'2024-06-15', estado:'activo', servicios:'Diseño de redes, Copywriting', valorMensual:190000, diaPago:5, formaPago:'Mercado Pago', proximoAjuste:'2026-12-15', frecuenciaAjuste:'Anual', notas:'', drive:'', canva:'', ig:''},
+      {id:uid('cli'), marca:'La Nueva', contacto:'Camila Ríos', rubro:'Gastronomía', email:'camila@lanueva.com', telefono:'+54 9 11 4444-3333', instagram:'@lanueva.bar', sitioweb:'', fechaInicio:'2025-01-10', estado:'pausado', servicios:'Community Management', valorMensual:120000, diaPago:15, formaPago:'Transferencia', proximoAjuste:'', frecuenciaAjuste:'', notas:'Pausado por reforma del local hasta septiembre.', drive:'', canva:'', ig:''},
+      {id:uid('cli'), marca:'Ricordo', contacto:'Marco Ricci', rubro:'Gastronomía', email:'marco@ricordo.com', telefono:'+54 9 11 4444-4444', instagram:'@ricordo.trattoria', sitioweb:'', fechaInicio:'2025-03-01', estado:'activo', servicios:'Manejo integral de redes, Diseño de menú', valorMensual:260000, diaPago:8, formaPago:'Transferencia', proximoAjuste:'2026-09-01', frecuenciaAjuste:'Semestral', notas:'', drive:'', canva:'', ig:''},
+      {id:uid('cli'), marca:'Frida Eventos', contacto:'Sofía Larrea', rubro:'Eventos', email:'sofia@fridaeventos.com', telefono:'+54 9 11 4444-5555', instagram:'@frida.eventos', sitioweb:'www.fridaeventos.com', fechaInicio:'2025-05-20', estado:'potencial', servicios:'', valorMensual:0, diaPago:'', formaPago:'', proximoAjuste:'', frecuenciaAjuste:'', notas:'En etapa de presupuesto para servicio anual.', drive:'', canva:'', ig:''},
+    ],
+    oportunidades: [
+      {id:uid('op'), marca:'Casa Devota', rubro:'Gastronomía', contacto:'Nico Devoto', instagram:'@casadevota', whatsapp:'+54 9 11 5555-1111', correo:'nico@casadevota.com', sitioweb:'', fechaContacto:'2026-07-02', medioContacto:'Instagram DM', servicioInteres:'Manejo integral de redes', presupuestoEstimado:230000, ultimoMensaje:'Envié propuesta de plan mensual.', fechaUltimoContacto:'2026-07-18', proximoSeguimiento:'2026-07-30', notas:'Muy interesados, esperando aprobación del socio.', estado:'presupuesto_enviado', historial:[{fecha:'2026-07-02', canal:'Instagram', resumen:'Primer contacto por DM', resultado:'Respondió con interés', proximoPaso:'Coordinar llamada'}]},
+      {id:uid('op'), marca:'Estudio Alma', rubro:'Diseño / Wellness', contacto:'Bianca Ortiz', instagram:'@estudioalma', whatsapp:'', correo:'bianca@estudioalma.com', sitioweb:'', fechaContacto:'2026-07-10', medioContacto:'Recomendación', servicioInteres:'Branding', presupuestoEstimado:180000, ultimoMensaje:'Coordinamos reunión para el lunes.', fechaUltimoContacto:'2026-07-22', proximoSeguimiento:'2026-08-03', notas:'', estado:'reunion_coordinada', historial:[]},
+      {id:uid('op'), marca:'Bruma', rubro:'Moda', contacto:'Lola Aguirre', instagram:'@bruma.indumentaria', whatsapp:'+54 9 11 5555-3333', correo:'', sitioweb:'', fechaContacto:'2026-06-20', medioContacto:'WhatsApp', servicioInteres:'Diseño de redes', presupuestoEstimado:150000, ultimoMensaje:'', fechaUltimoContacto:'2026-06-25', proximoSeguimiento:'2026-08-05', notas:'Retomar después de la temporada.', estado:'retomar', historial:[]},
+      {id:uid('op'), marca:'Sale & Pepe', rubro:'Gastronomía', contacto:'Renzo Bianchi', instagram:'@saleepepe.ba', whatsapp:'', correo:'renzo@saleepepe.com', sitioweb:'', fechaContacto:'2026-07-15', medioContacto:'Formulario web', servicioInteres:'Producción de fotos', presupuestoEstimado:95000, ultimoMensaje:'', fechaUltimoContacto:'2026-07-15', proximoSeguimiento:'2026-07-29', notas:'', estado:'por_contactar', historial:[]},
+      {id:uid('op'), marca:'Noor', rubro:'Lifestyle', contacto:'Delfina Sosa', instagram:'@noor.lifestyle', whatsapp:'+54 9 11 5555-5555', correo:'', sitioweb:'', fechaContacto:'2026-05-30', medioContacto:'Instagram DM', servicioInteres:'Manejo integral de redes', presupuestoEstimado:210000, ultimoMensaje:'No les interesa por ahora.', fechaUltimoContacto:'2026-06-10', proximoSeguimiento:'', notas:'', estado:'no_interesado', historial:[]},
+    ],
+    ingresos: [
+      {id:uid('ing'), fecha:'2026-07-05', cliente:'ROOT en La Casona', concepto:'Servicio mensual julio', servicio:'Manejo integral de redes', importe:280000, formaPago:'Transferencia', mes:'2026-07', estado:'cobrado', vencimiento:'2026-07-10', referencia:'F-0031', notas:''},
+      {id:uid('ing'), fecha:'2026-07-08', cliente:'Ricordo', concepto:'Servicio mensual julio', servicio:'Manejo integral de redes', importe:260000, formaPago:'Transferencia', mes:'2026-07', estado:'cobrado', vencimiento:'2026-07-08', referencia:'F-0032', notas:''},
+      {id:uid('ing'), fecha:'2026-07-01', cliente:'Müller', concepto:'Servicio mensual julio', servicio:'Diseño de redes', importe:190000, formaPago:'Mercado Pago', mes:'2026-07', estado:'pendiente', vencimiento:'2026-08-05', referencia:'F-0033', notas:''},
+      {id:uid('ing'), fecha:'2026-06-15', cliente:'La Nueva', concepto:'Servicio mensual junio', servicio:'Community Management', importe:120000, formaPago:'Transferencia', mes:'2026-06', estado:'vencido', vencimiento:'2026-06-15', referencia:'F-0028', notas:'Pendiente de pago hace más de 30 días.'},
+      {id:uid('ing'), fecha:'2026-07-20', cliente:'Frida Eventos', concepto:'Producción especial', servicio:'Producción de fotos', importe:150000, formaPago:'Transferencia', mes:'2026-07', estado:'vencido', vencimiento:'2026-07-22', referencia:'F-0034', notas:''},
+    ],
+    gastos: [
+      {id:uid('gas'), fecha:'2026-07-03', categoria:'Suscripciones', descripcion:'Canva Pro + Adobe CC', importe:45000, formaPago:'Tarjeta', cliente:'', produccion:'', tipo:'fijo', comprobante:'', notas:''},
+      {id:uid('gas'), fecha:'2026-07-12', categoria:'Producción', descripcion:'Alquiler locación shooting Ricordo', importe:60000, formaPago:'Transferencia', cliente:'Ricordo', produccion:'Campaña invierno', tipo:'variable', comprobante:'', notas:''},
+      {id:uid('gas'), fecha:'2026-07-15', categoria:'Transporte', descripcion:'Traslados producción', importe:18000, formaPago:'Efectivo', cliente:'ROOT en La Casona', produccion:'', tipo:'variable', comprobante:'', notas:''},
+      {id:uid('gas'), fecha:'2026-07-01', categoria:'Herramientas digitales', descripcion:'Later + Notion', importe:22000, formaPago:'Tarjeta', cliente:'', produccion:'', tipo:'fijo', comprobante:'', notas:''},
+    ],
+    servicios: [
+      {id:uid('ser'), nombre:'Manejo integral de redes sociales', categoria:'Redes sociales', descripcion:'Estrategia, planificación, diseño, copy, publicación, seguimiento y análisis.', precioBase:280000, modalidad:'mensual', duracion:'Continuo', entregables:'Calendario mensual + reportes', revisiones:2, gastosAdicionales:'Producción de contenido si se requiere', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Creación de contenido', categoria:'Producción', descripcion:'Planificación, producción de fotos y video, dirección creativa y edición.', precioBase:180000, modalidad:'por_proyecto', duracion:'1 jornada', entregables:'Material editado final', revisiones:1, gastosAdicionales:'Locación, vestuario', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Diseño de redes', categoria:'Diseño', descripcion:'Posteos, carruseles, historias, portadas y piezas gráficas.', precioBase:150000, modalidad:'mensual', duracion:'Continuo', entregables:'Piezas gráficas mensuales', revisiones:2, gastosAdicionales:'', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Community Management', categoria:'Comunidad', descripcion:'Respuesta de mensajes, comentarios y seguimiento de comunidad.', precioBase:120000, modalidad:'mensual', duracion:'Continuo', entregables:'Reporte mensual de interacción', revisiones:0, gastosAdicionales:'', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Producción de fotos', categoria:'Producción', descripcion:'Preproducción, dirección creativa, producción y selección de material.', precioBase:150000, modalidad:'por_jornada', duracion:'1 jornada', entregables:'Selección editada', revisiones:1, gastosAdicionales:'Locación, vestuario, props', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Estilismo', categoria:'Dirección creativa', descripcion:'Armado de looks, búsqueda de prendas, dirección estética.', precioBase:90000, modalidad:'por_jornada', duracion:'1 jornada', entregables:'Looks definidos', revisiones:1, gastosAdicionales:'', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Branding', categoria:'Identidad', descripcion:'Identidad visual, logo, paleta, tipografías, manual básico de marca.', precioBase:450000, modalidad:'por_proyecto', duracion:'4 semanas', entregables:'Manual de marca', revisiones:3, gastosAdicionales:'', estado:'activo', notas:'', recurrente:false},
+      {id:uid('ser'), nombre:'Diseño de menú', categoria:'Diseño', descripcion:'Organización del contenido, diseño editorial, adaptación y archivo final.', precioBase:130000, modalidad:'por_proyecto', duracion:'2 semanas', entregables:'Archivo listo para imprenta', revisiones:2, gastosAdicionales:'', estado:'activo', notas:'', recurrente:false},
+    ],
+    presupuestos: [
+      {id:uid('pre'), numero:'0001', fecha:'2026-07-01', validez:'2026-07-15', cliente:'Frida Eventos', contacto:'Sofía Larrea', items:[{servicio:'Manejo integral de redes sociales', descripcion:'Plan mensual completo', cantidad:1, precio:230000}], descuento:0, adicionales:0, formaPago:'50% al confirmar / 50% contra entrega', condiciones:'Vigencia 15 días.', notas:'', estado:'enviado'},
+      {id:uid('pre'), numero:'0002', fecha:'2026-06-10', validez:'2026-06-24', cliente:'Casa Devota', contacto:'Nico Devoto', items:[{servicio:'Manejo integral de redes sociales', descripcion:'Plan mensual', cantidad:1, precio:230000}], descuento:0, adicionales:0, formaPago:'Transferencia', condiciones:'', notas:'', estado:'enviado'},
+      {id:uid('pre'), numero:'0003', fecha:'2026-05-05', validez:'2026-05-19', cliente:'Müller', contacto:'Tomás Müller', items:[{servicio:'Diseño de redes', descripcion:'Plan mensual', cantidad:1, precio:190000}], descuento:10, adicionales:0, formaPago:'Mercado Pago', condiciones:'', notas:'', estado:'aprobado'},
+    ],
+    tareas: [
+      {id:uid('tar'), titulo:'Diseñar carrusel institucional', descripcion:'Carrusel para feed sobre historia de la marca.', cliente:'ROOT en La Casona', responsable:'Oriana', categoria:'Diseño', prioridad:'alta', estado:'en_proceso', fechaCreacion:'2026-07-20', fechaEntrega:'2026-07-29', etiquetas:'feed, institucional', horasEstimadas:3, horasReales:1.5, notas:''},
+      {id:uid('tar'), titulo:'Editar reel behind the scenes', descripcion:'', cliente:'Ricordo', responsable:'Oriana', categoria:'Edición', prioridad:'urgente', estado:'pendiente', fechaCreacion:'2026-07-22', fechaEntrega:'2026-07-28', etiquetas:'reel', horasEstimadas:2, horasReales:0, notas:''},
+      {id:uid('tar'), titulo:'Copy para historias de agosto', descripcion:'', cliente:'Müller', responsable:'Oriana', categoria:'Copy', prioridad:'media', estado:'pendiente', fechaCreacion:'2026-07-23', fechaEntrega:'2026-08-02', etiquetas:'', horasEstimadas:1.5, horasReales:0, notas:''},
+      {id:uid('tar'), titulo:'Responder mensajes acumulados', descripcion:'', cliente:'La Nueva', responsable:'Oriana', categoria:'Community Management', prioridad:'baja', estado:'pendiente', fechaCreacion:'2026-07-24', fechaEntrega:'2026-07-31', etiquetas:'', horasEstimadas:1, horasReales:0, notas:''},
+      {id:uid('tar'), titulo:'Preparar propuesta Estudio Alma', descripcion:'', cliente:'', responsable:'Oriana', categoria:'Seguimiento comercial', prioridad:'alta', estado:'en_revision', fechaCreacion:'2026-07-19', fechaEntrega:'2026-07-30', etiquetas:'presupuesto', horasEstimadas:2, horasReales:2, notas:''},
+      {id:uid('tar'), titulo:'Shot list producción Ricordo', descripcion:'', cliente:'Ricordo', responsable:'Oriana', categoria:'Producción', prioridad:'alta', estado:'finalizada', fechaCreacion:'2026-07-05', fechaEntrega:'2026-07-10', etiquetas:'', horasEstimadas:1, horasReales:1, notas:''},
+      {id:uid('tar'), titulo:'Reunión mensual ROOT', descripcion:'Revisión de resultados de julio.', cliente:'ROOT en La Casona', responsable:'Oriana', categoria:'Reunión', prioridad:'media', estado:'pendiente', fechaCreacion:'2026-07-20', fechaEntrega:'2026-08-01', etiquetas:'', horasEstimadas:1, horasReales:0, notas:''},
+      {id:uid('tar'), titulo:'Facturación de julio', descripcion:'', cliente:'', responsable:'Oriana', categoria:'Finanzas', prioridad:'media', estado:'pendiente', fechaCreacion:'2026-07-25', fechaEntrega:'2026-07-31', etiquetas:'', horasEstimadas:2, horasReales:0, notas:''},
+      {id:uid('tar'), titulo:'Plan de contenido agosto Ricordo', descripcion:'', cliente:'Ricordo', responsable:'Oriana', categoria:'Estrategia', prioridad:'alta', estado:'en_proceso', fechaCreacion:'2026-07-21', fechaEntrega:'2026-07-30', etiquetas:'', horasEstimadas:3, horasReales:1, notas:''},
+      {id:uid('tar'), titulo:'Seguimiento Bruma', descripcion:'Retomar contacto post temporada.', cliente:'', responsable:'Oriana', categoria:'Seguimiento comercial', prioridad:'baja', estado:'pendiente', fechaCreacion:'2026-07-15', fechaEntrega:'2026-08-05', etiquetas:'', horasEstimadas:0.5, horasReales:0, notas:''},
+    ],
+    contador: {presupuesto: 4},
+  };
+}
+
+const LS_KEY = 'trama_data_v1';
+const LS_BACKUPS = 'trama_backups_v1';
+const MAX_BACKUPS = 5;
+
+let STATE = null;
+let CAMBIOS_PENDIENTES = false;
+
+function cargarEstado(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    STATE = raw ? JSON.parse(raw) : datosDeEjemplo();
+  }catch(e){
+    console.error('Error al leer localStorage, se usan datos de ejemplo.', e);
+    STATE = datosDeEjemplo();
+  }
+  const base = datosDeEjemplo();
+  for(const k of Object.keys(base)){ if(STATE[k]===undefined) STATE[k]=base[k]; }
+  for(const k of Object.keys(base.config)){ if(STATE.config[k]===undefined) STATE.config[k]=base.config[k]; }
+}
+
+function crearBackup(motivo){
+  try{
+    let backups = JSON.parse(localStorage.getItem(LS_BACKUPS) || '[]');
+    backups.unshift({fecha:hoy(), hora:new Date().toLocaleTimeString('es-AR'), motivo, data:JSON.parse(JSON.stringify(STATE))});
+    backups = backups.slice(0, MAX_BACKUPS);
+    localStorage.setItem(LS_BACKUPS, JSON.stringify(backups));
+  }catch(e){ console.error('No se pudo crear copia de seguridad', e); }
+}
+
+let ultimoBackupTS = 0;
+function guardarEstadoReal(manual){
+  const el = document.getElementById('estadoGuardado');
+  const txt = document.getElementById('textoEstadoGuardado');
+  try{
+    el.className = 'estado-guardado guardando';
+    txt.textContent = 'Guardando…';
+    localStorage.setItem(LS_KEY, JSON.stringify(STATE));
+    const ahora = Date.now();
+    if(manual || (ahora - ultimoBackupTS) > 120000){
+      crearBackup(manual ? 'manual' : 'automático');
+      ultimoBackupTS = ahora;
+    }
+    CAMBIOS_PENDIENTES = false;
+    const hora = new Date().toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit'});
+    setTimeout(()=>{
+      el.className = 'estado-guardado';
+      txt.textContent = 'Todos los cambios fueron guardados · ' + hora;
+    }, 300);
+  }catch(e){
+    console.error('Error al guardar', e);
+    el.className = 'estado-guardado error';
+    txt.textContent = 'Error al guardar (¿modo privado del navegador?)';
+  }
+}
+const guardarDebounced = debounce(()=>guardarEstadoReal(false), 650);
+
+function marcarCambio(rerenderFn){
+  CAMBIOS_PENDIENTES = true;
+  guardarDebounced();
+  if(typeof rerenderFn === 'function') rerenderFn();
+}
+
+function exportarRespaldo(manual){
+  descargarJSON(STATE, `trama-respaldo-${hoy()}.json`);
+  if(manual) toast('Respaldo descargado. Guardalo en un lugar seguro (Drive, Archivos, etc.).', 'exito');
+}
+
+window.addEventListener('beforeunload', (e)=>{
+  if(CAMBIOS_PENDIENTES){
+    e.preventDefault();
+    e.returnValue = '';
+    return '';
+  }
+});
+
+/* ---------------------------------------------------------------------
+   3. TOASTS
+--------------------------------------------------------------------- */
+function toast(msg, tipo){
+  const cont = document.getElementById('toasts');
+  const div = document.createElement('div');
+  div.className = 'toast ' + (tipo||'');
+  div.textContent = msg;
+  cont.appendChild(div);
+  setTimeout(()=>{ div.style.opacity='0'; div.style.transition='opacity 300ms'; setTimeout(()=>div.remove(),300); }, 3200);
+}
+
+/* ---------------------------------------------------------------------
+   4. NAVEGACIÓN
+--------------------------------------------------------------------- */
+const SECCIONES = [
+  {id:'inicio', label:'Inicio', icon:'home'},
+  {id:'clientes', label:'Clientes', icon:'users'},
+  {id:'oportunidades', label:'Oportunidades', icon:'target'},
+  {id:'finanzas', label:'Finanzas', icon:'wallet'},
+  {id:'presupuestos', label:'Presupuestos', icon:'file-text'},
+  {id:'servicios', label:'Servicios', icon:'layers'},
+  {id:'tareas', label:'Tareas', icon:'check-square'},
+  {id:'configuracion', label:'Configuración', icon:'settings'},
+];
+let SECCION_ACTUAL = 'inicio';
+
+function iconoSvg(nombre){
+  const mapa = {
+    'home':'<path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><path d="M9 22V12h6v10"/>',
+    'users':'<path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/>',
+    'target':'<circle cx="12" cy="12" r="10"/><circle cx="12" cy="12" r="6"/><circle cx="12" cy="12" r="2"/>',
+    'wallet':'<path d="M21 12V7H5a2 2 0 010-4h14v4"/><path d="M3 5v14a2 2 0 002 2h16v-5"/><path d="M18 12a2 2 0 000 4h4v-4z"/>',
+    'file-text':'<path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><path d="M14 2v6h6"/><path d="M16 13H8"/><path d="M16 17H8"/><path d="M10 9H8"/>',
+    'layers':'<path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/>',
+    'check-square':'<path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/>',
+    'settings':'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 00.33 1.82l.06.06a2 2 0 11-2.83 2.83l-.06-.06a1.65 1.65 0 00-1.82-.33 1.65 1.65 0 00-1 1.51V21a2 2 0 01-4 0v-.09A1.65 1.65 0 009 19.4a1.65 1.65 0 00-1.82.33l-.06.06a2 2 0 11-2.83-2.83l.06-.06A1.65 1.65 0 005 15a1.65 1.65 0 00-1.51-1H3.4a2 2 0 010-4H3.5A1.65 1.65 0 005 9a1.65 1.65 0 00-.33-1.82l-.06-.06a2 2 0 112.83-2.83l.06.06A1.65 1.65 0 009 5a1.65 1.65 0 001-1.51V3.4a2 2 0 014 0v.09A1.65 1.65 0 0015 5a1.65 1.65 0 001.82-.33l.06-.06a2 2 0 112.83 2.83l-.06.06A1.65 1.65 0 0019.4 9a1.65 1.65 0 001.51 1H21a2 2 0 010 4h-.09a1.65 1.65 0 00-1.51 1z"/>',
+    'plus':'<path d="M12 5v14M5 12h14"/>',
+    'trash':'<path d="M3 6h18M8 6V4a2 2 0 012-2h4a2 2 0 012 2v2m3 0v14a2 2 0 01-2 2H7a2 2 0 01-2-2V6h14z"/>',
+    'edit':'<path d="M11 4H4a2 2 0 00-2 2v14a2 2 0 002 2h14a2 2 0 002-2v-7"/><path d="M18.5 2.5a2.12 2.12 0 013 3L12 15l-4 1 1-4z"/>',
+    'eye':'<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>',
+    'copy':'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 01-2-2V4a2 2 0 012-2h9a2 2 0 012 2v1"/>',
+    'print':'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
+    'download':'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
+    'upload':'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
+  };
+  return mapa[nombre] || mapa['home'];
+}
+
+function renderMenu(){
+  const nav = document.getElementById('menuNav');
+  nav.innerHTML = SECCIONES.map(s => `
+    <div class="menu-item ${s.id===SECCION_ACTUAL?'activo':''}" data-seccion="${s.id}">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">${iconoSvg(s.icon)}</svg>
+      <span class="label">${s.label}</span>
+    </div>`).join('');
+  nav.querySelectorAll('.menu-item').forEach(el=>{
+    el.addEventListener('click', ()=> irASeccion(el.dataset.seccion));
+  });
+}
+
+function irASeccion(id){
+  SECCION_ACTUAL = id;
+  renderMenu();
+  renderPagina();
+  document.getElementById('sidebar').classList.remove('abierta');
+  document.getElementById('fondoMobile').classList.remove('activo');
+  window.scrollTo(0,0);
+}
+
+function renderPagina(){
+  const p = document.getElementById('pagina');
+  const renderers = {
+    inicio: renderInicio,
+    clientes: renderClientes,
+    oportunidades: renderOportunidades,
+    finanzas: renderFinanzas,
+    presupuestos: renderPresupuestos,
+    servicios: renderServicios,
+    tareas: renderTareas,
+    configuracion: renderConfiguracion,
+  };
+  p.innerHTML = '';
+  try{
+    (renderers[SECCION_ACTUAL] || renderInicio)(p);
+  }catch(err){
+    console.error('Error al renderizar la sección', SECCION_ACTUAL, err);
+    p.innerHTML = '<div class="estado-vacio"><span class="script">Ups, algo no cargó bien</span><p>Hubo un problema al mostrar esta sección. Probá tocar otra sección del menú o recargar la página. Tus datos guardados no se ven afectados.</p></div>';
+  }
+}
+
+/* ---------------------------------------------------------------------
+   5. MODAL GENÉRICO
+--------------------------------------------------------------------- */
+function abrirModal({titulo, cuerpoHTML, ancho, footerHTML, onAbrir}){
+  document.getElementById('modalTitulo').textContent = titulo;
+  document.getElementById('modalBody').innerHTML = cuerpoHTML;
+  document.getElementById('modalFooter').innerHTML = footerHTML || '';
+  document.getElementById('modalBox').classList.toggle('ancho', !!ancho);
+  document.getElementById('overlay').classList.add('abierto');
+  if(typeof onAbrir === 'function') onAbrir();
+}
+function cerrarModal(){
+  document.getElementById('overlay').classList.remove('abierto');
+}
+document.getElementById('btnCerrarModal').addEventListener('click', cerrarModal);
+document.getElementById('overlay').addEventListener('click', (e)=>{ if(e.target.id==='overlay') cerrarModal(); });
+
+function confirmarAccion(mensaje, callback){
+  abrirModal({
+    titulo:'Confirmar acción',
+    cuerpoHTML:`<p style="font-size:0.9rem;">${escapeHTML(mensaje)}</p>`,
+    footerHTML:`<button class="btn outline" id="btnCancelarConf">Cancelar</button><button class="btn peligro" id="btnConfirmarConf">Confirmar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarConf').onclick = cerrarModal;
+      document.getElementById('btnConfirmarConf').onclick = ()=>{ cerrarModal(); callback(); };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   6. INICIO
+--------------------------------------------------------------------- */
+let MES_INICIO = new Date().toISOString().slice(0,7);
+
+function renderInicio(root){
+  const [anio, mes] = MES_INICIO.split('-');
+  const ingresosDelMes = STATE.ingresos.filter(i=>i.mes===MES_INICIO);
+  const totalIngresos = ingresosDelMes.reduce((a,i)=>a+Number(i.importe||0),0);
+  const cobrado = ingresosDelMes.filter(i=>i.estado==='cobrado').reduce((a,i)=>a+Number(i.importe||0),0);
+  const pendienteCobro = ingresosDelMes.filter(i=>i.estado==='pendiente'||i.estado==='parcial').reduce((a,i)=>a+Number(i.importe||0),0);
+  const vencido = STATE.ingresos.filter(i=>i.estado==='vencido').reduce((a,i)=>a+Number(i.importe||0),0);
+  const gastosDelMes = STATE.gastos.filter(g=>g.fecha && g.fecha.slice(0,7)===MES_INICIO);
+  const totalGastos = gastosDelMes.reduce((a,g)=>a+Number(g.importe||0),0);
+  const gananciaNeta = totalIngresos - totalGastos;
+
+  const clientesActivos = STATE.clientes.filter(c=>c.estado==='activo').length;
+  const potenciales = STATE.oportunidades.filter(o=>!['ganado','no_interesado'].includes(o.estado)).length;
+  const presuEnviados = STATE.presupuestos.filter(p=>p.estado==='enviado').length;
+  const presuAprobados = STATE.presupuestos.filter(p=>p.estado==='aprobado').length;
+  const tareasPendientes = STATE.tareas.filter(t=>t.estado!=='finalizada').length;
+  const tareasVencidas = STATE.tareas.filter(t=>t.estado!=='finalizada' && diasEntre(t.fechaEntrega)<0).length;
+  const pagosVencidosArr = STATE.ingresos.filter(i=>i.estado==='vencido');
+
+  const opciones = [];
+  const hoyD = new Date();
+  for(let i=-3;i<=2;i++){
+    const d = new Date(hoyD.getFullYear(), hoyD.getMonth()+i, 1);
+    const val = d.toISOString().slice(0,7);
+    opciones.push(`<option value="${val}" ${val===MES_INICIO?'selected':''}>${d.toLocaleDateString('es-AR',{month:'long', year:'numeric'})}</option>`);
+  }
+
+  root.innerHTML = `
+    <div class="saludo-inicio">
+      <h1>Hola, ${escapeHTML(STATE.config.responsable||'Ori')}.</h1>
+      <p>${new Date().toLocaleDateString('es-AR',{weekday:'long', day:'numeric', month:'long', year:'numeric'})}</p>
+    </div>
+
+    <div class="toolbar" style="margin-bottom:20px;">
+      <label class="texto-gris" style="font-size:0.78rem;">Ver mes:</label>
+      <select id="selectorMes">${opciones.join('')}</select>
+    </div>
+
+    <div class="grid-cards">
+      <div class="card negro"><div class="etiqueta">Ingresos del mes</div><div class="valor">${moneda(totalIngresos)}</div></div>
+      <div class="card"><div class="etiqueta">Gastos del mes</div><div class="valor">${moneda(totalGastos)}</div></div>
+      <div class="card acento"><div class="etiqueta">Ganancia neta</div><div class="valor rosa-texto">${moneda(gananciaNeta)}</div></div>
+      <div class="card"><div class="etiqueta">Pendiente de cobro</div><div class="valor">${moneda(pendienteCobro)}</div></div>
+      <div class="card"><div class="etiqueta">Pagos vencidos</div><div class="valor" style="color:#a1352d;">${moneda(vencido)}</div></div>
+      <div class="card"><div class="etiqueta">Clientes activos</div><div class="valor">${clientesActivos}</div></div>
+      <div class="card"><div class="etiqueta">Oportunidades activas</div><div class="valor">${potenciales}</div></div>
+      <div class="card"><div class="etiqueta">Presupuestos enviados</div><div class="valor">${presuEnviados}</div></div>
+      <div class="card"><div class="etiqueta">Presupuestos aprobados</div><div class="valor">${presuAprobados}</div></div>
+      <div class="card"><div class="etiqueta">Tareas pendientes</div><div class="valor">${tareasPendientes}</div></div>
+      <div class="card"><div class="etiqueta">Tareas vencidas</div><div class="valor" style="color:${tareasVencidas>0?'#a1352d':'inherit'};">${tareasVencidas}</div></div>
+      <div class="card"><div class="etiqueta">Total cobrado</div><div class="valor">${moneda(cobrado)}</div></div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Ingresos y gastos <span class="script">— visión mensual</span></h3>
+        <canvas id="chartIngresosGastos" height="230"></canvas>
+      </div>
+      <div class="panel">
+        <h3>Facturación por cliente</h3>
+        <canvas id="chartFacturacionCliente" height="230"></canvas>
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Pagos pendientes y vencidos</h3>
+        ${renderListaPagosPendientes()}
+      </div>
+      <div class="panel">
+        <h3>Tareas prioritarias</h3>
+        ${renderListaTareasPrioritarias()}
+      </div>
+    </div>
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Seguimientos comerciales pendientes</h3>
+        ${renderListaSeguimientos()}
+      </div>
+      <div class="panel">
+        <h3>Ingresos por servicio</h3>
+        <canvas id="chartServicio" height="230"></canvas>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('selectorMes').addEventListener('change', (e)=>{ MES_INICIO = e.target.value; renderPagina(); });
+
+  // ---- Gráficos ----
+  setTimeout(()=>{
+    if(typeof Chart === 'undefined'){
+      document.querySelectorAll('#chartIngresosGastos, #chartFacturacionCliente, #chartServicio').forEach(c=>{
+        c.insertAdjacentHTML('afterend', '<p class="texto-gris" style="font-size:0.75rem;">Los gráficos necesitan conexión a internet para cargar. Los datos siguen disponibles en las tarjetas y listas.</p>');
+        c.style.display = 'none';
+      });
+      return;
+    }
+    const meses = [];
+    for(let i=5;i>=0;i--){
+      const d = new Date(); d.setMonth(d.getMonth()-i);
+      meses.push(d.toISOString().slice(0,7));
+    }
+    const ingPorMes = meses.map(m => STATE.ingresos.filter(i=>i.mes===m).reduce((a,i)=>a+Number(i.importe||0),0));
+    const gasPorMes = meses.map(m => STATE.gastos.filter(g=>g.fecha && g.fecha.slice(0,7)===m).reduce((a,g)=>a+Number(g.importe||0),0));
+    const ctx1 = document.getElementById('chartIngresosGastos');
+    if(ctx1) new Chart(ctx1, {
+      type:'bar',
+      data:{ labels: meses.map(m=>new Date(m+'-02').toLocaleDateString('es-AR',{month:'short'})),
+        datasets:[
+          {label:'Ingresos', data:ingPorMes, backgroundColor:'#0a0a0a'},
+          {label:'Gastos', data:gasPorMes, backgroundColor:'#f6cfd6'},
+        ]},
+      options:{responsive:true, plugins:{legend:{position:'bottom', labels:{font:{family:'Raleway'}}}}, scales:{y:{beginAtZero:true}}}
+    });
+
+    const porCliente = {};
+    STATE.ingresos.forEach(i=>{ porCliente[i.cliente] = (porCliente[i.cliente]||0) + Number(i.importe||0); });
+    const clientesOrd = Object.entries(porCliente).sort((a,b)=>b[1]-a[1]).slice(0,6);
+    const ctx2 = document.getElementById('chartFacturacionCliente');
+    if(ctx2) new Chart(ctx2, {
+      type:'doughnut',
+      data:{ labels: clientesOrd.map(c=>c[0]), datasets:[{data:clientesOrd.map(c=>c[1]), backgroundColor:['#0a0a0a','#f6cfd6','#ecb6c1','#8a8580','#e8e5e1','#c9899a']}]},
+      options:{responsive:true, plugins:{legend:{position:'bottom', labels:{font:{family:'Raleway', size:10}}}}}
+    });
+
+    const porServicio = {};
+    STATE.ingresos.forEach(i=>{ const s=i.servicio||'Sin especificar'; porServicio[s]=(porServicio[s]||0)+Number(i.importe||0); });
+    const servOrd = Object.entries(porServicio).sort((a,b)=>b[1]-a[1]);
+    const ctx3 = document.getElementById('chartServicio');
+    if(ctx3) new Chart(ctx3, {
+      type:'bar',
+      data:{ labels: servOrd.map(s=>s[0]), datasets:[{label:'Ingresos', data:servOrd.map(s=>s[1]), backgroundColor:'#ecb6c1'}]},
+      options:{indexAxis:'y', responsive:true, plugins:{legend:{display:false}}, scales:{x:{beginAtZero:true}}}
+    });
+  },0);
+}
+
+function renderListaPagosPendientes(){
+  const items = STATE.ingresos.filter(i=>i.estado==='pendiente'||i.estado==='vencido'||i.estado==='parcial')
+    .sort((a,b)=> (a.vencimiento||'').localeCompare(b.vencimiento||''));
+  if(items.length===0) return `<div class="estado-vacio"><span class="script">Todo al día</span><p>No hay pagos pendientes ni vencidos.</p></div>`;
+  return `<ul class="lista-simple">${items.slice(0,8).map(i=>`
+    <li><div><div class="nombre">${escapeHTML(i.cliente)}</div><div class="detalle">${escapeHTML(i.concepto)} · vence ${fechaVista(i.vencimiento)}</div></div>
+    <div style="text-align:right;"><div>${moneda(i.importe)}</div><span class="pill ${i.estado}">${etiquetaEstadoIngreso(i.estado)}</span></div></li>`).join('')}</ul>`;
+}
+function renderListaTareasPrioritarias(){
+  const items = STATE.tareas.filter(t=>t.estado!=='finalizada').sort((a,b)=>{
+    const orden = {urgente:0, alta:1, media:2, baja:3};
+    return (orden[a.prioridad]??9)-(orden[b.prioridad]??9) || (a.fechaEntrega||'').localeCompare(b.fechaEntrega||'');
+  });
+  if(items.length===0) return `<div class="estado-vacio"><span class="script">Sin pendientes</span><p>No hay tareas pendientes.</p></div>`;
+  return `<ul class="lista-simple">${items.slice(0,8).map(t=>`
+    <li><div><div class="nombre">${escapeHTML(t.titulo)}</div><div class="detalle">${escapeHTML(t.cliente||'General')} · entrega ${fechaVista(t.fechaEntrega)}</div></div>
+    <span class="pill ${t.prioridad}">${t.prioridad}</span></li>`).join('')}</ul>`;
+}
+function renderListaSeguimientos(){
+  const items = STATE.oportunidades.filter(o=>!['ganado','no_interesado'].includes(o.estado) && o.proximoSeguimiento)
+    .sort((a,b)=>(a.proximoSeguimiento||'').localeCompare(b.proximoSeguimiento||''));
+  if(items.length===0) return `<div class="estado-vacio"><span class="script">Al día</span><p>No hay seguimientos programados.</p></div>`;
+  return `<ul class="lista-simple">${items.slice(0,8).map(o=>{
+    const dias = diasEntre(o.proximoSeguimiento);
+    return `<li><div><div class="nombre">${escapeHTML(o.marca)}</div><div class="detalle">${escapeHTML(estadoOportunidadLabel(o.estado))}</div></div>
+    <span class="pill ${dias<0?'vencido':'pendiente'}">${dias<0?'atrasado':fechaVista(o.proximoSeguimiento)}</span></li>`;
+  }).join('')}</ul>`;
+}
+
+function etiquetaEstadoIngreso(e){
+  return {cobrado:'Cobrado', pendiente:'Pendiente', vencido:'Vencido', parcial:'Parcial'}[e] || e;
+}
+
+/* ---------------------------------------------------------------------
+   7. CLIENTES
+--------------------------------------------------------------------- */
+let FILTRO_CLIENTES = {texto:'', estado:'', rubro:'', orden:'marca'};
+
+function renderClientes(root){
+  const rubros = [...new Set(STATE.clientes.map(c=>c.rubro).filter(Boolean))];
+  let lista = STATE.clientes.filter(c=>{
+    const t = FILTRO_CLIENTES.texto.toLowerCase();
+    const okTexto = !t || (c.marca+c.contacto+c.rubro).toLowerCase().includes(t);
+    const okEstado = !FILTRO_CLIENTES.estado || c.estado===FILTRO_CLIENTES.estado;
+    const okRubro = !FILTRO_CLIENTES.rubro || c.rubro===FILTRO_CLIENTES.rubro;
+    return okTexto && okEstado && okRubro;
+  });
+  lista.sort((a,b)=> (a[FILTRO_CLIENTES.orden]||'').toString().localeCompare((b[FILTRO_CLIENTES.orden]||'').toString()));
+
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Clientes</h1><div class="sub">${STATE.clientes.length} clientes en total</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevoCliente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo cliente</button></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="fClienteTexto" placeholder="Buscar por marca o contacto…" value="${escapeHTML(FILTRO_CLIENTES.texto)}">
+      <select id="fClienteEstado">
+        <option value="">Todos los estados</option>
+        ${['activo','pausado','potencial','finalizado'].map(e=>`<option value="${e}" ${FILTRO_CLIENTES.estado===e?'selected':''}>${capitaliza(e)}</option>`).join('')}
+      </select>
+      <select id="fClienteRubro">
+        <option value="">Todos los rubros</option>
+        ${rubros.map(r=>`<option value="${escapeHTML(r)}" ${FILTRO_CLIENTES.rubro===r?'selected':''}>${escapeHTML(r)}</option>`).join('')}
+      </select>
+      <select id="fClienteOrden">
+        <option value="marca" ${FILTRO_CLIENTES.orden==='marca'?'selected':''}>Ordenar: Marca (A-Z)</option>
+        <option value="fechaInicio" ${FILTRO_CLIENTES.orden==='fechaInicio'?'selected':''}>Ordenar: Fecha de inicio</option>
+        <option value="estado" ${FILTRO_CLIENTES.orden==='estado'?'selected':''}>Ordenar: Estado</option>
+      </select>
+    </div>
+    ${lista.length===0 ? `<div class="estado-vacio"><span class="script">Sin resultados</span><p>No se encontraron clientes con estos filtros.</p></div>` : `
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>Marca</th><th>Contacto</th><th>Rubro</th><th>Estado</th><th>Valor mensual</th><th>Día de pago</th><th></th></tr></thead>
+      <tbody>${lista.map(c=>`
+        <tr>
+          <td><strong>${escapeHTML(c.marca)}</strong></td>
+          <td>${escapeHTML(c.contacto)}</td>
+          <td>${escapeHTML(c.rubro)}</td>
+          <td><span class="pill ${c.estado}">${capitaliza(c.estado)}</span></td>
+          <td>${c.valorMensual ? moneda(c.valorMensual) : '—'}</td>
+          <td>${c.diaPago || '—'}</td>
+          <td class="acciones-fila">
+            <button data-ver="${c.id}" title="Ver ficha"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('eye')}</svg></button>
+            <button data-editar="${c.id}" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+            <button data-eliminar="${c.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+          </td>
+        </tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+
+  document.getElementById('btnNuevoCliente').onclick = ()=>abrirFormCliente();
+  document.getElementById('fClienteTexto').oninput = (e)=>{ FILTRO_CLIENTES.texto=e.target.value; renderPagina(); };
+  document.getElementById('fClienteEstado').onchange = (e)=>{ FILTRO_CLIENTES.estado=e.target.value; renderPagina(); };
+  document.getElementById('fClienteRubro').onchange = (e)=>{ FILTRO_CLIENTES.rubro=e.target.value; renderPagina(); };
+  document.getElementById('fClienteOrden').onchange = (e)=>{ FILTRO_CLIENTES.orden=e.target.value; renderPagina(); };
+  root.querySelectorAll('[data-ver]').forEach(b=>b.onclick=()=>abrirFichaCliente(b.dataset.ver));
+  root.querySelectorAll('[data-editar]').forEach(b=>b.onclick=()=>abrirFormCliente(b.dataset.editar));
+  root.querySelectorAll('[data-eliminar]').forEach(b=>b.onclick=()=>{
+    const c = STATE.clientes.find(x=>x.id===b.dataset.eliminar);
+    confirmarAccion(`¿Eliminar al cliente "${c.marca}"? Esta acción no se puede deshacer.`, ()=>{
+      STATE.clientes = STATE.clientes.filter(x=>x.id!==c.id);
+      marcarCambio(renderPagina);
+      toast('Cliente eliminado', 'exito');
+    });
+  });
+}
+
+function capitaliza(s){ return s ? s.charAt(0).toUpperCase()+s.slice(1) : s; }
+
+function abrirFormCliente(id){
+  const editando = !!id;
+  const c = editando ? STATE.clientes.find(x=>x.id===id) : {marca:'',contacto:'',rubro:'',email:'',telefono:'',instagram:'',sitioweb:'',fechaInicio:hoy(),estado:'potencial',servicios:'',valorMensual:'',diaPago:'',formaPago:'',proximoAjuste:'',frecuenciaAjuste:'',notas:'',drive:'',canva:'',ig:''};
+  abrirModal({
+    titulo: editando ? 'Editar cliente' : 'Nuevo cliente', ancho:true,
+    cuerpoHTML: `
+      <div class="fila-campos">
+        <div class="campo"><label>Marca <span class="req">*</span></label><input id="c_marca" value="${escapeHTML(c.marca)}"></div>
+        <div class="campo"><label>Contacto</label><input id="c_contacto" value="${escapeHTML(c.contacto)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Rubro</label><input id="c_rubro" value="${escapeHTML(c.rubro)}"></div>
+        <div class="campo"><label>Estado</label><select id="c_estado">${['activo','pausado','potencial','finalizado'].map(e=>`<option value="${e}" ${c.estado===e?'selected':''}>${capitaliza(e)}</option>`).join('')}</select></div>
+        <div class="campo"><label>Fecha de inicio</label><input type="date" id="c_fechaInicio" value="${c.fechaInicio||''}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Correo</label><input type="email" id="c_email" value="${escapeHTML(c.email)}"></div>
+        <div class="campo"><label>Teléfono</label><input id="c_telefono" value="${escapeHTML(c.telefono)}"></div>
+        <div class="campo"><label>Instagram</label><input id="c_instagram" value="${escapeHTML(c.instagram)}"></div>
+      </div>
+      <div class="campo"><label>Sitio web</label><input id="c_sitioweb" value="${escapeHTML(c.sitioweb)}"></div>
+      <div class="campo"><label>Servicios contratados</label><input id="c_servicios" value="${escapeHTML(c.servicios)}" placeholder="Ej: Manejo integral de redes, Diseño de menú"></div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Valor mensual</label><input type="number" id="c_valorMensual" value="${c.valorMensual||''}"></div>
+        <div class="campo"><label>Día de pago</label><input type="number" min="1" max="31" id="c_diaPago" value="${c.diaPago||''}"></div>
+        <div class="campo"><label>Forma de pago</label><input id="c_formaPago" value="${escapeHTML(c.formaPago)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Próximo ajuste</label><input type="date" id="c_proximoAjuste" value="${c.proximoAjuste||''}"></div>
+        <div class="campo"><label>Frecuencia de ajuste</label><input id="c_frecuenciaAjuste" value="${escapeHTML(c.frecuenciaAjuste)}" placeholder="Semestral, anual…"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Link Google Drive</label><input id="c_drive" value="${escapeHTML(c.drive)}"></div>
+        <div class="campo"><label>Link Canva</label><input id="c_canva" value="${escapeHTML(c.canva)}"></div>
+        <div class="campo"><label>Link Instagram</label><input id="c_ig" value="${escapeHTML(c.ig)}"></div>
+      </div>
+      <div class="campo"><label>Notas internas</label><textarea id="c_notas">${escapeHTML(c.notas)}</textarea></div>
+    `,
+    footerHTML: `<button class="btn outline" id="btnCancelarCliente">Cancelar</button><button class="btn rosa" id="btnGuardarCliente">Guardar</button>`,
+    onAbrir: ()=>{
+      document.getElementById('btnCancelarCliente').onclick = cerrarModal;
+      document.getElementById('btnGuardarCliente').onclick = ()=>{
+        const marca = document.getElementById('c_marca').value.trim();
+        if(!marca){ toast('La marca es obligatoria', 'error'); document.getElementById('c_marca').focus(); return; }
+        const datos = {
+          marca, contacto:val('c_contacto'), rubro:val('c_rubro'), email:val('c_email'), telefono:val('c_telefono'),
+          instagram:val('c_instagram'), sitioweb:val('c_sitioweb'), fechaInicio:val('c_fechaInicio'), estado:val('c_estado'),
+          servicios:val('c_servicios'), valorMensual:Number(val('c_valorMensual'))||0, diaPago:val('c_diaPago'),
+          formaPago:val('c_formaPago'), proximoAjuste:val('c_proximoAjuste'), frecuenciaAjuste:val('c_frecuenciaAjuste'),
+          drive:val('c_drive'), canva:val('c_canva'), ig:val('c_ig'), notas:val('c_notas'),
+        };
+        if(editando){ Object.assign(c, datos); toast('Cliente actualizado', 'exito'); }
+        else { STATE.clientes.push({id:uid('cli'), ...datos}); toast('Cliente creado', 'exito'); }
+        cerrarModal(); marcarCambio(renderPagina);
+      };
+    }
+  });
+}
+function val(id){ const el=document.getElementById(id); return el ? el.value.trim() : ''; }
+
+function abrirFichaCliente(id){
+  const c = STATE.clientes.find(x=>x.id===id);
+  if(!c) return;
+  const tareasCliente = STATE.tareas.filter(t=>t.cliente===c.marca);
+  const ingresosCliente = STATE.ingresos.filter(i=>i.cliente===c.marca);
+  const presuCliente = STATE.presupuestos.filter(p=>p.cliente===c.marca);
+  const totalFacturado = ingresosCliente.reduce((a,i)=>a+Number(i.importe||0),0);
+  abrirModal({
+    titulo: c.marca, ancho:true,
+    cuerpoHTML: `
+      <div class="ficha-tabs">
+        <button class="ftab activo" data-tab="datos">Datos</button>
+        <button class="ftab" data-tab="pagos">Historial de pagos</button>
+        <button class="ftab" data-tab="tareas">Tareas</button>
+        <button class="ftab" data-tab="presupuestos">Presupuestos</button>
+      </div>
+      <div id="ftab-datos" class="ftab-panel">
+        <div class="grid-3col">
+          <div><div class="etiqueta texto-gris" style="font-size:0.7rem; text-transform:uppercase;">Rubro</div><div>${escapeHTML(c.rubro)||'—'}</div></div>
+          <div><div class="etiqueta texto-gris" style="font-size:0.7rem; text-transform:uppercase;">Estado</div><span class="pill ${c.estado}">${capitaliza(c.estado)}</span></div>
+          <div><div class="etiqueta texto-gris" style="font-size:0.7rem; text-transform:uppercase;">Valor mensual</div><div>${c.valorMensual?moneda(c.valorMensual):'—'}</div></div>
+        </div>
+        <hr class="linea">
+        <p><strong>Contacto:</strong> ${escapeHTML(c.contacto)||'—'} · ${escapeHTML(c.email)||'—'} · ${escapeHTML(c.telefono)||'—'}</p>
+        <p><strong>Servicios contratados:</strong> ${escapeHTML(c.servicios)||'—'}</p>
+        <p><strong>Total facturado histórico:</strong> ${moneda(totalFacturado)}</p>
+        ${c.notas ? `<p style="margin-top:10px;"><strong>Notas:</strong> ${escapeHTML(c.notas)}</p>` : ''}
+      </div>
+      <div id="ftab-pagos" class="ftab-panel oculto">
+        ${ingresosCliente.length===0 ? `<div class="estado-vacio"><p>Sin registros de pago.</p></div>` :
+        `<ul class="lista-simple">${ingresosCliente.map(i=>`<li><div><div class="nombre">${escapeHTML(i.concepto)}</div><div class="detalle">${fechaVista(i.fecha)}</div></div><div><div>${moneda(i.importe)}</div><span class="pill ${i.estado}">${etiquetaEstadoIngreso(i.estado)}</span></div></li>`).join('')}</ul>`}
+      </div>
+      <div id="ftab-tareas" class="ftab-panel oculto">
+        ${tareasCliente.length===0 ? `<div class="estado-vacio"><p>Sin tareas asociadas.</p></div>` :
+        `<ul class="lista-simple">${tareasCliente.map(t=>`<li><div class="nombre">${escapeHTML(t.titulo)}</div><span class="pill ${t.estado.replace('_','')}">${t.estado.replace('_',' ')}</span></li>`).join('')}</ul>`}
+      </div>
+      <div id="ftab-presupuestos" class="ftab-panel oculto">
+        ${presuCliente.length===0 ? `<div class="estado-vacio"><p>Sin presupuestos asociados.</p></div>` :
+        `<ul class="lista-simple">${presuCliente.map(p=>`<li><div class="nombre">Presupuesto #${p.numero}</div><span class="pill ${p.estado}">${capitaliza(p.estado)}</span></li>`).join('')}</ul>`}
+      </div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnPresuDesdeFicha">Crear presupuesto</button><button class="btn rosa" id="btnEditarDesdeFicha">Editar cliente</button>`,
+    onAbrir: ()=>{
+      document.querySelectorAll('.ftab').forEach(b=>b.onclick=()=>{
+        document.querySelectorAll('.ftab').forEach(x=>x.classList.remove('activo'));
+        document.querySelectorAll('.ftab-panel').forEach(x=>x.classList.add('oculto'));
+        b.classList.add('activo');
+        document.getElementById('ftab-'+b.dataset.tab).classList.remove('oculto');
+      });
+      document.getElementById('btnEditarDesdeFicha').onclick = ()=>{ cerrarModal(); abrirFormCliente(c.id); };
+      document.getElementById('btnPresuDesdeFicha').onclick = ()=>{ cerrarModal(); abrirFormPresupuesto(null, c.marca); };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   8. OPORTUNIDADES
+--------------------------------------------------------------------- */
+const ESTADOS_OP = ['por_contactar','primer_mensaje','respondio','reunion_coordinada','propuesta_preparacion','presupuesto_enviado','en_negociacion','ganado','no_interesado','retomar'];
+function estadoOportunidadLabel(e){
+  return {por_contactar:'Por contactar', primer_mensaje:'Primer mensaje enviado', respondio:'Respondió', reunion_coordinada:'Reunión coordinada',
+    propuesta_preparacion:'Propuesta en preparación', presupuesto_enviado:'Presupuesto enviado', en_negociacion:'En negociación',
+    ganado:'Ganado', no_interesado:'No interesado', retomar:'Retomar más adelante'}[e] || e;
+}
+let VISTA_OPORTUNIDADES = 'kanban';
+
+function renderOportunidades(root){
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Oportunidades</h1><div class="sub">${STATE.oportunidades.length} en seguimiento comercial</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevaOp"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nueva oportunidad</button></div>
+    </div>
+    <div class="toolbar">
+      <div class="vista-toggle">
+        <button data-v="kanban" class="${VISTA_OPORTUNIDADES==='kanban'?'activo':''}">Kanban</button>
+        <button data-v="tabla" class="${VISTA_OPORTUNIDADES==='tabla'?'activo':''}">Tabla</button>
+      </div>
+    </div>
+    <div id="opContenido"></div>
+  `;
+  document.getElementById('btnNuevaOp').onclick = ()=>abrirFormOportunidad();
+  root.querySelectorAll('.vista-toggle button').forEach(b=>b.onclick=()=>{ VISTA_OPORTUNIDADES=b.dataset.v; renderPagina(); });
+  const cont = document.getElementById('opContenido');
+  if(VISTA_OPORTUNIDADES==='kanban') cont.innerHTML = renderKanbanOportunidades();
+  else cont.innerHTML = renderTablaOportunidades();
+  activarAccionesOportunidades(cont);
+  if(VISTA_OPORTUNIDADES==='kanban') activarDragOportunidades(cont);
+}
+
+function renderKanbanOportunidades(){
+  return `<div class="kanban">${ESTADOS_OP.map(e=>{
+    const items = STATE.oportunidades.filter(o=>o.estado===e);
+    return `<div class="kanban-col" data-estado="${e}">
+      <h4>${estadoOportunidadLabel(e)} <span>${items.length}</span></h4>
+      <div class="kanban-cards" data-estado-lista="${e}">
+        ${items.map(o=>`<div class="kanban-card" draggable="true" data-id="${o.id}">
+          <div class="titulo-card">${escapeHTML(o.marca)}</div>
+          <div class="texto-gris" style="font-size:0.72rem;">${escapeHTML(o.rubro||'')}</div>
+          <div class="meta-card"><span>${o.presupuestoEstimado?moneda(o.presupuestoEstimado):''}</span><span>${o.proximoSeguimiento?fechaVista(o.proximoSeguimiento):''}</span></div>
+        </div>`).join('')}
+      </div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderTablaOportunidades(){
+  const lista = [...STATE.oportunidades].sort((a,b)=>(a.proximoSeguimiento||'9999').localeCompare(b.proximoSeguimiento||'9999'));
+  if(lista.length===0) return `<div class="estado-vacio"><span class="script">Sin oportunidades</span></div>`;
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Marca</th><th>Contacto</th><th>Servicio de interés</th><th>Estado</th><th>Próx. seguimiento</th><th></th></tr></thead>
+    <tbody>${lista.map(o=>`
+      <tr>
+        <td><strong>${escapeHTML(o.marca)}</strong></td>
+        <td>${escapeHTML(o.contacto)}</td>
+        <td>${escapeHTML(o.servicioInteres)}</td>
+        <td><span class="pill ${o.estado.replace('_','')}">${estadoOportunidadLabel(o.estado)}</span></td>
+        <td>${fechaVista(o.proximoSeguimiento)}</td>
+        <td class="acciones-fila">
+          <button data-editar-op="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+          <button data-eliminar-op="${o.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+        </td>
+      </tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function activarAccionesOportunidades(cont){
+  cont.querySelectorAll('[data-editar-op]').forEach(b=>b.onclick=()=>abrirFormOportunidad(b.dataset.editarOp));
+  cont.querySelectorAll('[data-eliminar-op]').forEach(b=>b.onclick=()=>{
+    const o = STATE.oportunidades.find(x=>x.id===b.dataset.eliminarOp);
+    confirmarAccion(`¿Eliminar la oportunidad "${o.marca}"?`, ()=>{
+      STATE.oportunidades = STATE.oportunidades.filter(x=>x.id!==o.id);
+      marcarCambio(renderPagina); toast('Oportunidad eliminada','exito');
+    });
+  });
+  cont.querySelectorAll('.kanban-card').forEach(card=>{
+    card.onclick = ()=>abrirFormOportunidad(card.dataset.id);
+  });
+}
+function activarDragOportunidades(cont){
+  let arrastrando = null;
+  cont.querySelectorAll('.kanban-card').forEach(card=>{
+    card.addEventListener('dragstart', ()=>{ arrastrando = card.dataset.id; card.classList.add('arrastrando'); });
+    card.addEventListener('dragend', ()=>{ card.classList.remove('arrastrando'); });
+  });
+  cont.querySelectorAll('.kanban-col').forEach(col=>{
+    col.addEventListener('dragover', (e)=>{ e.preventDefault(); col.classList.add('sobre'); });
+    col.addEventListener('dragleave', ()=>col.classList.remove('sobre'));
+    col.addEventListener('drop', (e)=>{
+      e.preventDefault(); col.classList.remove('sobre');
+      const op = STATE.oportunidades.find(x=>x.id===arrastrando);
+      if(op){ op.estado = col.dataset.estado; marcarCambio(renderPagina); toast('Oportunidad movida a "'+estadoOportunidadLabel(op.estado)+'"','exito'); }
+    });
+  });
+}
+
+function abrirFormOportunidad(id){
+  const editando = !!id;
+  const o = editando ? STATE.oportunidades.find(x=>x.id===id) : {marca:'',rubro:'',contacto:'',instagram:'',whatsapp:'',correo:'',sitioweb:'',fechaContacto:hoy(),medioContacto:'',servicioInteres:'',presupuestoEstimado:'',ultimoMensaje:'',fechaUltimoContacto:hoy(),proximoSeguimiento:'',notas:'',estado:'por_contactar',historial:[]};
+  abrirModal({
+    titulo: editando ? 'Editar oportunidad' : 'Nueva oportunidad', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos">
+        <div class="campo"><label>Marca <span class="req">*</span></label><input id="o_marca" value="${escapeHTML(o.marca)}"></div>
+        <div class="campo"><label>Rubro</label><input id="o_rubro" value="${escapeHTML(o.rubro)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Contacto</label><input id="o_contacto" value="${escapeHTML(o.contacto)}"></div>
+        <div class="campo"><label>Instagram</label><input id="o_instagram" value="${escapeHTML(o.instagram)}"></div>
+        <div class="campo"><label>WhatsApp</label><input id="o_whatsapp" value="${escapeHTML(o.whatsapp)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Correo</label><input id="o_correo" value="${escapeHTML(o.correo)}"></div>
+        <div class="campo"><label>Medio de contacto</label><input id="o_medioContacto" value="${escapeHTML(o.medioContacto)}"></div>
+        <div class="campo"><label>Fecha de primer contacto</label><input type="date" id="o_fechaContacto" value="${o.fechaContacto||''}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Servicio de interés</label><input id="o_servicioInteres" value="${escapeHTML(o.servicioInteres)}"></div>
+        <div class="campo"><label>Presupuesto estimado</label><input type="number" id="o_presupuestoEstimado" value="${o.presupuestoEstimado||''}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Fecha del último contacto</label><input type="date" id="o_fechaUltimoContacto" value="${o.fechaUltimoContacto||''}"></div>
+        <div class="campo"><label>Próximo seguimiento</label><input type="date" id="o_proximoSeguimiento" value="${o.proximoSeguimiento||''}"></div>
+      </div>
+      <div class="campo"><label>Último mensaje enviado</label><textarea id="o_ultimoMensaje">${escapeHTML(o.ultimoMensaje)}</textarea></div>
+      <div class="campo"><label>Estado comercial</label><select id="o_estado">${ESTADOS_OP.map(e=>`<option value="${e}" ${o.estado===e?'selected':''}>${estadoOportunidadLabel(e)}</option>`).join('')}</select></div>
+      <div class="campo"><label>Notas</label><textarea id="o_notas">${escapeHTML(o.notas)}</textarea></div>
+    `,
+    footerHTML:`
+      ${editando ? `<button class="btn outline" id="btnConvertirCliente">Convertir en cliente</button>` : ''}
+      <button class="btn outline" id="btnCancelarOp">Cancelar</button><button class="btn rosa" id="btnGuardarOp">Guardar</button>`,
+    onAbrir: ()=>{
+      document.getElementById('btnCancelarOp').onclick = cerrarModal;
+      if(editando){
+        document.getElementById('btnConvertirCliente').onclick = ()=>{
+          confirmarAccion(`¿Convertir "${o.marca}" en cliente activo?`, ()=>{
+            STATE.clientes.push({id:uid('cli'), marca:o.marca, contacto:o.contacto, rubro:o.rubro, email:o.correo, telefono:o.whatsapp,
+              instagram:o.instagram, sitioweb:o.sitioweb, fechaInicio:hoy(), estado:'activo', servicios:o.servicioInteres,
+              valorMensual:Number(o.presupuestoEstimado)||0, diaPago:'', formaPago:'', proximoAjuste:'', frecuenciaAjuste:'', notas:o.notas, drive:'', canva:'', ig:''});
+            o.estado='ganado';
+            cerrarModal(); marcarCambio(renderPagina); toast('Oportunidad convertida en cliente','exito');
+          });
+        };
+      }
+      document.getElementById('btnGuardarOp').onclick = ()=>{
+        const marca = val('o_marca');
+        if(!marca){ toast('La marca es obligatoria','error'); return; }
+        const datos = {
+          marca, rubro:val('o_rubro'), contacto:val('o_contacto'), instagram:val('o_instagram'), whatsapp:val('o_whatsapp'),
+          correo:val('o_correo'), medioContacto:val('o_medioContacto'), fechaContacto:val('o_fechaContacto'),
+          servicioInteres:val('o_servicioInteres'), presupuestoEstimado:Number(val('o_presupuestoEstimado'))||0,
+          fechaUltimoContacto:val('o_fechaUltimoContacto'), proximoSeguimiento:val('o_proximoSeguimiento'),
+          ultimoMensaje:val('o_ultimoMensaje'), estado:val('o_estado'), notas:val('o_notas'),
+        };
+        if(editando) Object.assign(o, datos);
+        else STATE.oportunidades.push({id:uid('op'), historial:[], ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Oportunidad actualizada':'Oportunidad creada','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   9. FINANZAS
+--------------------------------------------------------------------- */
+let TAB_FINANZAS = 'resumen';
+let FILTRO_FIN = {mes:'', cliente:'', estado:''};
+
+function renderFinanzas(root){
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Finanzas</h1><div class="sub">Ingresos, gastos y pagos pendientes</div></div>
+      <div class="pagina-acciones">
+        <button class="btn outline" id="btnExportCSV"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('download')}</svg>Exportar CSV</button>
+        <button class="btn rosa" id="btnNuevoMovimiento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo movimiento</button>
+      </div>
+    </div>
+    <div class="ficha-tabs">
+      ${['resumen','ingresos','gastos','pendientes'].map(t=>`<button class="ftabfin ${TAB_FINANZAS===t?'activo':''}" data-tab="${t}">${capitaliza(t)}</button>`).join('')}
+    </div>
+    <div id="finContenido"></div>
+  `;
+  root.querySelectorAll('.ftabfin').forEach(b=>b.onclick=()=>{ TAB_FINANZAS=b.dataset.tab; renderPagina(); });
+  document.getElementById('btnNuevoMovimiento').onclick = ()=>{
+    if(TAB_FINANZAS==='gastos') abrirFormGasto(); else abrirFormIngreso();
+  };
+  document.getElementById('btnExportCSV').onclick = exportarFinanzasCSV;
+
+  const cont = document.getElementById('finContenido');
+  if(TAB_FINANZAS==='resumen') cont.innerHTML = renderResumenFinanzas();
+  else if(TAB_FINANZAS==='ingresos') cont.innerHTML = renderTablaIngresos();
+  else if(TAB_FINANZAS==='gastos') cont.innerHTML = renderTablaGastos();
+  else cont.innerHTML = renderTablaPendientes();
+  activarAccionesFinanzas(cont);
+  if(TAB_FINANZAS==='resumen') dibujarGraficosResumen();
+}
+
+function renderResumenFinanzas(){
+  const totalIng = STATE.ingresos.reduce((a,i)=>a+Number(i.importe||0),0);
+  const cobrado = STATE.ingresos.filter(i=>i.estado==='cobrado').reduce((a,i)=>a+Number(i.importe||0),0);
+  const pendiente = STATE.ingresos.filter(i=>i.estado==='pendiente').reduce((a,i)=>a+Number(i.importe||0),0);
+  const vencido = STATE.ingresos.filter(i=>i.estado==='vencido').reduce((a,i)=>a+Number(i.importe||0),0);
+  const totalGas = STATE.gastos.reduce((a,g)=>a+Number(g.importe||0),0);
+  const gastosFijos = STATE.gastos.filter(g=>g.tipo==='fijo').reduce((a,g)=>a+Number(g.importe||0),0);
+  const gastosVariables = STATE.gastos.filter(g=>g.tipo==='variable').reduce((a,g)=>a+Number(g.importe||0),0);
+  const neta = totalIng-totalGas;
+  const rentabilidad = totalIng>0 ? ((neta/totalIng)*100).toFixed(1) : '0';
+  return `
+    <div class="grid-cards">
+      <div class="card negro"><div class="etiqueta">Total ingresos</div><div class="valor">${moneda(totalIng)}</div></div>
+      <div class="card"><div class="etiqueta">Total gastos</div><div class="valor">${moneda(totalGas)}</div></div>
+      <div class="card acento"><div class="etiqueta">Ganancia neta</div><div class="valor rosa-texto">${moneda(neta)}</div></div>
+      <div class="card"><div class="etiqueta">% Rentabilidad</div><div class="valor">${rentabilidad}%</div></div>
+      <div class="card"><div class="etiqueta">Cobrado</div><div class="valor">${moneda(cobrado)}</div></div>
+      <div class="card"><div class="etiqueta">Pendiente</div><div class="valor">${moneda(pendiente)}</div></div>
+      <div class="card"><div class="etiqueta">Vencido</div><div class="valor" style="color:#a1352d;">${moneda(vencido)}</div></div>
+      <div class="card"><div class="etiqueta">Gastos fijos / variables</div><div class="valor" style="font-size:1.1rem;">${moneda(gastosFijos)} / ${moneda(gastosVariables)}</div></div>
+    </div>
+    <div class="grid-2">
+      <div class="panel"><h3>Gastos por categoría</h3><canvas id="chartGastosCat" height="230"></canvas></div>
+      <div class="panel"><h3>Estado de los ingresos</h3><canvas id="chartEstadoIng" height="230"></canvas></div>
+    </div>
+  `;
+}
+function dibujarGraficosResumen(){
+  setTimeout(()=>{
+    if(typeof Chart === 'undefined'){
+      document.querySelectorAll('#chartGastosCat, #chartEstadoIng').forEach(c=>{
+        c.insertAdjacentHTML('afterend', '<p class="texto-gris" style="font-size:0.75rem;">Los gráficos necesitan conexión a internet para cargar.</p>');
+        c.style.display = 'none';
+      });
+      return;
+    }
+    const porCat = {};
+    STATE.gastos.forEach(g=>{ porCat[g.categoria]=(porCat[g.categoria]||0)+Number(g.importe||0); });
+    const ctx1 = document.getElementById('chartGastosCat');
+    if(ctx1) new Chart(ctx1,{type:'doughnut', data:{labels:Object.keys(porCat), datasets:[{data:Object.values(porCat), backgroundColor:['#0a0a0a','#f6cfd6','#ecb6c1','#8a8580','#e8e5e1','#c9899a','#d9c2c8']}]}, options:{plugins:{legend:{position:'bottom',labels:{font:{size:10}}}}}});
+    const estados = ['cobrado','pendiente','vencido','parcial'];
+    const cantidades = estados.map(e=>STATE.ingresos.filter(i=>i.estado===e).length);
+    const ctx2 = document.getElementById('chartEstadoIng');
+    if(ctx2) new Chart(ctx2,{type:'bar', data:{labels:estados.map(e=>etiquetaEstadoIngreso(e)), datasets:[{data:cantidades, backgroundColor:['#4d7a48','#8a6a2f','#a1352d','#c9899a']}]}, options:{plugins:{legend:{display:false}}}});
+  },0);
+}
+
+function renderTablaIngresos(){
+  const clientes = [...new Set(STATE.ingresos.map(i=>i.cliente))];
+  let lista = STATE.ingresos.filter(i=>{
+    const okMes = !FILTRO_FIN.mes || i.mes===FILTRO_FIN.mes;
+    const okCli = !FILTRO_FIN.cliente || i.cliente===FILTRO_FIN.cliente;
+    const okEst = !FILTRO_FIN.estado || i.estado===FILTRO_FIN.estado;
+    return okMes && okCli && okEst;
+  }).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  return `
+    <div class="toolbar">
+      <input type="month" id="ffMes" value="${FILTRO_FIN.mes}">
+      <select id="ffCliente"><option value="">Todos los clientes</option>${clientes.map(c=>`<option ${FILTRO_FIN.cliente===c?'selected':''}>${escapeHTML(c)}</option>`).join('')}</select>
+      <select id="ffEstado"><option value="">Todos los estados</option>${['cobrado','pendiente','vencido','parcial'].map(e=>`<option value="${e}" ${FILTRO_FIN.estado===e?'selected':''}>${etiquetaEstadoIngreso(e)}</option>`).join('')}</select>
+    </div>
+    ${lista.length===0?`<div class="estado-vacio"><span class="script">Sin ingresos</span><p>No hay ingresos con estos filtros.</p></div>`:`
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>Fecha</th><th>Cliente</th><th>Concepto</th><th>Servicio</th><th>Importe</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${lista.map(i=>`
+        <tr><td>${fechaVista(i.fecha)}</td><td>${escapeHTML(i.cliente)}</td><td>${escapeHTML(i.concepto)}</td><td>${escapeHTML(i.servicio)}</td>
+        <td>${moneda(i.importe)}</td><td><span class="pill ${i.estado}">${etiquetaEstadoIngreso(i.estado)}</span></td>
+        <td class="acciones-fila">
+          <button data-editar-ing="${i.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+          <button data-eliminar-ing="${i.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+        </td></tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+}
+function renderTablaGastos(){
+  let lista = [...STATE.gastos].sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  return `
+    ${lista.length===0?`<div class="estado-vacio"><span class="script">Sin gastos</span></div>`:`
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>Fecha</th><th>Categoría</th><th>Descripción</th><th>Importe</th><th>Tipo</th><th>Cliente</th><th></th></tr></thead>
+      <tbody>${lista.map(g=>`
+        <tr><td>${fechaVista(g.fecha)}</td><td>${escapeHTML(g.categoria)}</td><td>${escapeHTML(g.descripcion)}</td>
+        <td>${moneda(g.importe)}</td><td>${capitaliza(g.tipo)}</td><td>${escapeHTML(g.cliente)||'—'}</td>
+        <td class="acciones-fila">
+          <button data-editar-gas="${g.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+          <button data-eliminar-gas="${g.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+        </td></tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+}
+function renderTablaPendientes(){
+  const lista = STATE.ingresos.filter(i=>i.estado==='pendiente'||i.estado==='vencido'||i.estado==='parcial').sort((a,b)=>(a.vencimiento||'').localeCompare(b.vencimiento||''));
+  if(lista.length===0) return `<div class="estado-vacio"><span class="script">Al día</span><p>No hay pagos pendientes.</p></div>`;
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Cliente</th><th>Concepto</th><th>Importe</th><th>Vencimiento</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${lista.map(i=>`
+      <tr><td>${escapeHTML(i.cliente)}</td><td>${escapeHTML(i.concepto)}</td><td>${moneda(i.importe)}</td>
+      <td>${fechaVista(i.vencimiento)}</td><td><span class="pill ${i.estado}">${etiquetaEstadoIngreso(i.estado)}</span></td>
+      <td class="acciones-fila"><button data-marcar-cobrado="${i.id}" title="Marcar como cobrado"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6L9 17l-5-5"/></svg></button></td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function activarAccionesFinanzas(cont){
+  const mesEl = document.getElementById('ffMes'); if(mesEl) mesEl.onchange=(e)=>{FILTRO_FIN.mes=e.target.value; renderPagina();};
+  const cliEl = document.getElementById('ffCliente'); if(cliEl) cliEl.onchange=(e)=>{FILTRO_FIN.cliente=e.target.value; renderPagina();};
+  const estEl = document.getElementById('ffEstado'); if(estEl) estEl.onchange=(e)=>{FILTRO_FIN.estado=e.target.value; renderPagina();};
+  cont.querySelectorAll('[data-editar-ing]').forEach(b=>b.onclick=()=>abrirFormIngreso(b.dataset.editarIng));
+  cont.querySelectorAll('[data-eliminar-ing]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este ingreso?', ()=>{ STATE.ingresos=STATE.ingresos.filter(x=>x.id!==b.dataset.eliminarIng); marcarCambio(renderPagina); toast('Ingreso eliminado','exito'); });
+  });
+  cont.querySelectorAll('[data-editar-gas]').forEach(b=>b.onclick=()=>abrirFormGasto(b.dataset.editarGas));
+  cont.querySelectorAll('[data-eliminar-gas]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este gasto?', ()=>{ STATE.gastos=STATE.gastos.filter(x=>x.id!==b.dataset.eliminarGas); marcarCambio(renderPagina); toast('Gasto eliminado','exito'); });
+  });
+  cont.querySelectorAll('[data-marcar-cobrado]').forEach(b=>b.onclick=()=>{
+    const i = STATE.ingresos.find(x=>x.id===b.dataset.marcarCobrado);
+    i.estado='cobrado'; marcarCambio(renderPagina); toast('Marcado como cobrado','exito');
+  });
+}
+
+function abrirFormIngreso(id){
+  const editando = !!id;
+  const i = editando ? STATE.ingresos.find(x=>x.id===id) : {fecha:hoy(),cliente:'',concepto:'',servicio:'',importe:'',formaPago:'',mes:hoy().slice(0,7),estado:'pendiente',vencimiento:'',referencia:'',notas:''};
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar ingreso':'Nuevo ingreso', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos tres">
+        <div class="campo"><label>Fecha</label><input type="date" id="i_fecha" value="${i.fecha}"></div>
+        <div class="campo"><label>Cliente <span class="req">*</span></label><input id="i_cliente" list="lista_clientes_i" value="${escapeHTML(i.cliente)}"><datalist id="lista_clientes_i">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Mes correspondiente</label><input type="month" id="i_mes" value="${i.mes}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Concepto</label><input id="i_concepto" value="${escapeHTML(i.concepto)}"></div>
+        <div class="campo"><label>Servicio</label><input id="i_servicio" value="${escapeHTML(i.servicio)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Importe <span class="req">*</span></label><input type="number" id="i_importe" value="${i.importe}"></div>
+        <div class="campo"><label>Forma de pago</label><input id="i_formaPago" value="${escapeHTML(i.formaPago)}"></div>
+        <div class="campo"><label>Estado</label><select id="i_estado">${['cobrado','pendiente','vencido','parcial'].map(e=>`<option value="${e}" ${i.estado===e?'selected':''}>${etiquetaEstadoIngreso(e)}</option>`).join('')}</select></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Fecha de vencimiento</label><input type="date" id="i_vencimiento" value="${i.vencimiento}"></div>
+        <div class="campo"><label>Nº de factura / referencia</label><input id="i_referencia" value="${escapeHTML(i.referencia)}"></div>
+      </div>
+      <div class="campo"><label>Notas</label><textarea id="i_notas">${escapeHTML(i.notas)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarIng">Cancelar</button><button class="btn rosa" id="btnGuardarIng">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarIng').onclick = cerrarModal;
+      document.getElementById('btnGuardarIng').onclick = ()=>{
+        const cliente = val('i_cliente'); const importe = Number(val('i_importe'));
+        if(!cliente || !importe){ toast('Cliente e importe son obligatorios','error'); return; }
+        const datos = {fecha:val('i_fecha'), cliente, concepto:val('i_concepto'), servicio:val('i_servicio'), importe,
+          formaPago:val('i_formaPago'), mes:val('i_mes'), estado:val('i_estado'), vencimiento:val('i_vencimiento'),
+          referencia:val('i_referencia'), notas:val('i_notas')};
+        if(editando) Object.assign(i, datos); else STATE.ingresos.push({id:uid('ing'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Ingreso actualizado':'Ingreso creado','exito');
+      };
+    }
+  });
+}
+function abrirFormGasto(id){
+  const editando = !!id;
+  const g = editando ? STATE.gastos.find(x=>x.id===id) : {fecha:hoy(),categoria:'Otros',descripcion:'',importe:'',formaPago:'',cliente:'',produccion:'',tipo:'variable',comprobante:'',notas:''};
+  const categorias = ['Suscripciones','Herramientas digitales','Transporte','Producción','Fotografía','Vestuario','Utilería','Publicidad','Honorarios','Impuestos','Equipamiento','Comidas','Alquileres','Otros'];
+  abrirModal({
+    titulo: editando?'Editar gasto':'Nuevo gasto', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos tres">
+        <div class="campo"><label>Fecha</label><input type="date" id="g_fecha" value="${g.fecha}"></div>
+        <div class="campo"><label>Categoría</label><select id="g_categoria">${categorias.map(c=>`<option ${g.categoria===c?'selected':''}>${c}</option>`).join('')}</select></div>
+        <div class="campo"><label>Tipo</label><select id="g_tipo"><option value="fijo" ${g.tipo==='fijo'?'selected':''}>Fijo</option><option value="variable" ${g.tipo==='variable'?'selected':''}>Variable</option></select></div>
+      </div>
+      <div class="campo"><label>Descripción <span class="req">*</span></label><input id="g_descripcion" value="${escapeHTML(g.descripcion)}"></div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Importe <span class="req">*</span></label><input type="number" id="g_importe" value="${g.importe}"></div>
+        <div class="campo"><label>Forma de pago</label><input id="g_formaPago" value="${escapeHTML(g.formaPago)}"></div>
+        <div class="campo"><label>Cliente relacionado</label><input id="g_cliente" value="${escapeHTML(g.cliente)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Producción relacionada</label><input id="g_produccion" value="${escapeHTML(g.produccion)}"></div>
+        <div class="campo"><label>Comprobante / referencia</label><input id="g_comprobante" value="${escapeHTML(g.comprobante)}"></div>
+      </div>
+      <div class="campo"><label>Notas</label><textarea id="g_notas">${escapeHTML(g.notas)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarGas">Cancelar</button><button class="btn rosa" id="btnGuardarGas">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarGas').onclick = cerrarModal;
+      document.getElementById('btnGuardarGas').onclick = ()=>{
+        const descripcion = val('g_descripcion'); const importe = Number(val('g_importe'));
+        if(!descripcion || !importe){ toast('Descripción e importe son obligatorios','error'); return; }
+        const datos = {fecha:val('g_fecha'), categoria:val('g_categoria'), descripcion, importe, formaPago:val('g_formaPago'),
+          cliente:val('g_cliente'), produccion:val('g_produccion'), tipo:val('g_tipo'), comprobante:val('g_comprobante'), notas:val('g_notas')};
+        if(editando) Object.assign(g, datos); else STATE.gastos.push({id:uid('gas'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Gasto actualizado':'Gasto creado','exito');
+      };
+    }
+  });
+}
+function exportarFinanzasCSV(){
+  let csv = 'Tipo,Fecha,Cliente/Categoria,Concepto/Descripcion,Importe,Estado/Tipo\n';
+  STATE.ingresos.forEach(i=> csv += `Ingreso,${i.fecha},"${i.cliente}","${i.concepto}",${i.importe},${i.estado}\n`);
+  STATE.gastos.forEach(g=> csv += `Gasto,${g.fecha},"${g.categoria}","${g.descripcion}",${g.importe},${g.tipo}\n`);
+  const blob = new Blob([csv], {type:'text/csv;charset=utf-8;'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a'); a.href = url; a.download = 'trama-finanzas.csv'; a.click();
+  URL.revokeObjectURL(url);
+  toast('Archivo CSV exportado','exito');
+}
+
+/* ---------------------------------------------------------------------
+   10. SERVICIOS
+--------------------------------------------------------------------- */
+function renderServicios(root){
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Servicios</h1><div class="sub">Catálogo de servicios de TRAMA</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevoServicio"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo servicio</button></div>
+    </div>
+    <div class="grid-cards" style="grid-template-columns:repeat(auto-fill,minmax(270px,1fr));">
+      ${STATE.servicios.map(s=>`
+        <div class="card">
+          <div class="etiqueta">${escapeHTML(s.categoria)}</div>
+          <h3 style="font-size:1.1rem; margin:4px 0 8px 0;">${escapeHTML(s.nombre)}</h3>
+          <p class="texto-gris" style="font-size:0.78rem; margin-bottom:10px;">${escapeHTML(s.descripcion)}</p>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+            <span class="editorial" style="font-size:1.2rem;">${moneda(s.precioBase)}</span>
+            <span class="pill pendiente">${etiquetaModalidad(s.modalidad)}</span>
+          </div>
+          <div class="acciones-fila">
+            <button data-editar-serv="${s.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+            <button data-eliminar-serv="${s.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+          </div>
+        </div>`).join('')}
+    </div>
+  `;
+  document.getElementById('btnNuevoServicio').onclick = ()=>abrirFormServicio();
+  root.querySelectorAll('[data-editar-serv]').forEach(b=>b.onclick=()=>abrirFormServicio(b.dataset.editarServ));
+  root.querySelectorAll('[data-eliminar-serv]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este servicio del catálogo?', ()=>{
+      STATE.servicios = STATE.servicios.filter(x=>x.id!==b.dataset.eliminarServ);
+      marcarCambio(renderPagina); toast('Servicio eliminado','exito');
+    });
+  });
+}
+function etiquetaModalidad(m){
+  return {mensual:'Mensual', por_proyecto:'Por proyecto', por_jornada:'Por jornada', por_pieza:'Por pieza', por_hora:'Por hora'}[m] || m;
+}
+function abrirFormServicio(id){
+  const editando = !!id;
+  const s = editando ? STATE.servicios.find(x=>x.id===id) : {nombre:'',categoria:'',descripcion:'',precioBase:'',modalidad:'mensual',duracion:'',entregables:'',revisiones:'',gastosAdicionales:'',estado:'activo',notas:''};
+  abrirModal({
+    titulo: editando?'Editar servicio':'Nuevo servicio', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos">
+        <div class="campo"><label>Nombre <span class="req">*</span></label><input id="s_nombre" value="${escapeHTML(s.nombre)}"></div>
+        <div class="campo"><label>Categoría</label><input id="s_categoria" value="${escapeHTML(s.categoria)}"></div>
+      </div>
+      <div class="campo"><label>Descripción</label><textarea id="s_descripcion">${escapeHTML(s.descripcion)}</textarea></div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Precio base <span class="req">*</span></label><input type="number" id="s_precioBase" value="${s.precioBase}"></div>
+        <div class="campo"><label>Modalidad de cobro</label><select id="s_modalidad">${['mensual','por_proyecto','por_jornada','por_pieza','por_hora'].map(m=>`<option value="${m}" ${s.modalidad===m?'selected':''}>${etiquetaModalidad(m)}</option>`).join('')}</select></div>
+        <div class="campo"><label>Duración estimada</label><input id="s_duracion" value="${escapeHTML(s.duracion)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Entregables</label><input id="s_entregables" value="${escapeHTML(s.entregables)}"></div>
+        <div class="campo"><label>Cantidad de revisiones</label><input type="number" id="s_revisiones" value="${s.revisiones}"></div>
+      </div>
+      <div class="campo"><label>Gastos adicionales posibles</label><input id="s_gastosAdicionales" value="${escapeHTML(s.gastosAdicionales)}"></div>
+      <div class="campo"><label>Notas</label><textarea id="s_notas">${escapeHTML(s.notas)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarServ">Cancelar</button><button class="btn rosa" id="btnGuardarServ">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarServ').onclick = cerrarModal;
+      document.getElementById('btnGuardarServ').onclick = ()=>{
+        const nombre = val('s_nombre'); const precioBase = Number(val('s_precioBase'));
+        if(!nombre || !precioBase){ toast('Nombre y precio base son obligatorios','error'); return; }
+        const datos = {nombre, categoria:val('s_categoria'), descripcion:val('s_descripcion'), precioBase, modalidad:val('s_modalidad'),
+          duracion:val('s_duracion'), entregables:val('s_entregables'), revisiones:Number(val('s_revisiones'))||0,
+          gastosAdicionales:val('s_gastosAdicionales'), estado:'activo', notas:val('s_notas')};
+        if(editando) Object.assign(s, datos); else STATE.servicios.push({id:uid('ser'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Servicio actualizado':'Servicio creado','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   11. PRESUPUESTOS
+--------------------------------------------------------------------- */
+function renderPresupuestos(root){
+  const lista = [...STATE.presupuestos].sort((a,b)=>(b.numero||'').localeCompare(a.numero||''));
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Presupuestos</h1><div class="sub">${STATE.presupuestos.length} presupuestos generados</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevoPresu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo presupuesto</button></div>
+    </div>
+    ${lista.length===0?`<div class="estado-vacio"><span class="script">Sin presupuestos</span><p>Creá tu primer presupuesto para un cliente u oportunidad.</p></div>`:`
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>Nº</th><th>Cliente</th><th>Fecha</th><th>Validez</th><th>Total</th><th>Estado</th><th></th></tr></thead>
+      <tbody>${lista.map(p=>`
+        <tr><td>#${p.numero}</td><td>${escapeHTML(p.cliente)}</td><td>${fechaVista(p.fecha)}</td><td>${fechaVista(p.validez)}</td>
+        <td>${moneda(totalPresupuesto(p))}</td><td><span class="pill ${p.estado}">${capitaliza(p.estado)}</span></td>
+        <td class="acciones-fila">
+          <button data-ver-presu="${p.id}" title="Ver / imprimir"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('eye')}</svg></button>
+          <button data-editar-presu="${p.id}" title="Editar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+          <button data-duplicar-presu="${p.id}" title="Duplicar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('copy')}</svg></button>
+          <button data-eliminar-presu="${p.id}" title="Eliminar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+        </td></tr>`).join('')}</tbody>
+    </table></div>`}
+  `;
+  document.getElementById('btnNuevoPresu').onclick = ()=>abrirFormPresupuesto();
+  root.querySelectorAll('[data-ver-presu]').forEach(b=>b.onclick=()=>verPresupuesto(b.dataset.verPresu));
+  root.querySelectorAll('[data-editar-presu]').forEach(b=>b.onclick=()=>abrirFormPresupuesto(b.dataset.editarPresu));
+  root.querySelectorAll('[data-duplicar-presu]').forEach(b=>b.onclick=()=>{
+    const p = STATE.presupuestos.find(x=>x.id===b.dataset.duplicarPresu);
+    const nuevo = JSON.parse(JSON.stringify(p));
+    nuevo.id = uid('pre'); nuevo.numero = proximoNumeroPresupuesto(); nuevo.estado='borrador'; nuevo.fecha=hoy();
+    STATE.presupuestos.push(nuevo); marcarCambio(renderPagina); toast('Presupuesto duplicado','exito');
+  });
+  root.querySelectorAll('[data-eliminar-presu]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este presupuesto?', ()=>{
+      STATE.presupuestos = STATE.presupuestos.filter(x=>x.id!==b.dataset.eliminarPresu);
+      marcarCambio(renderPagina); toast('Presupuesto eliminado','exito');
+    });
+  });
+}
+function totalPresupuesto(p){
+  const sub = (p.items||[]).reduce((a,it)=>a+(Number(it.precio||0)*Number(it.cantidad||1)),0);
+  const conDescuento = sub - (sub*(Number(p.descuento||0)/100));
+  return conDescuento + Number(p.adicionales||0);
+}
+function proximoNumeroPresupuesto(){
+  STATE.contador.presupuesto = (STATE.contador.presupuesto||0)+1;
+  return String(STATE.contador.presupuesto).padStart(4,'0');
+}
+
+function abrirFormPresupuesto(id, clientePrefill){
+  const editando = !!id;
+  const p = editando ? STATE.presupuestos.find(x=>x.id===id) : {
+    numero: proximoNumeroPresupuesto(), fecha:hoy(), validez:new Date(Date.now()+14*86400000).toISOString().slice(0,10),
+    cliente:clientePrefill||'', contacto:'', items:[{servicio:'',descripcion:'',cantidad:1,precio:0}], descuento:0, adicionales:0,
+    formaPago:STATE.config.metodosPago||'', condiciones:STATE.config.condicionesPresupuesto||'', notas:'', estado:'borrador'
+  };
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+
+  function filasItems(){
+    return p.items.map((it,idx)=>`
+      <div class="fila-campos" style="grid-template-columns:2fr 0.7fr 1fr 1fr auto; align-items:end; gap:8px;" data-fila-item="${idx}">
+        <div class="campo"><label>Servicio</label><input list="lista_servicios_p" data-item="servicio" data-idx="${idx}" value="${escapeHTML(it.servicio)}"></div>
+        <div class="campo"><label>Cant.</label><input type="number" min="1" data-item="cantidad" data-idx="${idx}" value="${it.cantidad}"></div>
+        <div class="campo"><label>Precio unit.</label><input type="number" data-item="precio" data-idx="${idx}" value="${it.precio}"></div>
+        <div class="campo"><label>Descripción</label><input data-item="descripcion" data-idx="${idx}" value="${escapeHTML(it.descripcion)}"></div>
+        <button class="icon-btn" data-quitar-item="${idx}" style="margin-bottom:15px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="14" height="14">${iconoSvg('trash')}</svg></button>
+      </div>`).join('');
+  }
+
+  abrirModal({
+    titulo: editando?`Editar presupuesto #${p.numero}`:'Nuevo presupuesto', ancho:true,
+    cuerpoHTML:`
+      <datalist id="lista_servicios_p">${STATE.servicios.map(s=>`<option value="${escapeHTML(s.nombre)}" data-precio="${s.precioBase}">`).join('')}</datalist>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Cliente <span class="req">*</span></label><input id="p_cliente" list="lista_clientes_p" value="${escapeHTML(p.cliente)}"><datalist id="lista_clientes_p">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Contacto</label><input id="p_contacto" value="${escapeHTML(p.contacto)}"></div>
+        <div class="campo"><label>Estado</label><select id="p_estado">${['borrador','enviado','aprobado','rechazado','vencido'].map(e=>`<option value="${e}" ${p.estado===e?'selected':''}>${capitaliza(e)}</option>`).join('')}</select></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Fecha</label><input type="date" id="p_fecha" value="${p.fecha}"></div>
+        <div class="campo"><label>Válido hasta</label><input type="date" id="p_validez" value="${p.validez}"></div>
+      </div>
+      <hr class="linea">
+      <div id="itemsPresu">${filasItems()}</div>
+      <button class="btn outline chico" id="btnAgregarItem" style="margin-top:6px;">+ Agregar servicio</button>
+      <hr class="linea">
+      <div class="fila-campos tres">
+        <div class="campo"><label>Descuento (%)</label><input type="number" id="p_descuento" value="${p.descuento}"></div>
+        <div class="campo"><label>Adicionales ($)</label><input type="number" id="p_adicionales" value="${p.adicionales}"></div>
+        <div class="campo"><label>Forma de pago</label><input id="p_formaPago" value="${escapeHTML(p.formaPago)}"></div>
+      </div>
+      <div class="campo"><label>Condiciones</label><textarea id="p_condiciones">${escapeHTML(p.condiciones)}</textarea></div>
+      <div class="campo"><label>Notas</label><textarea id="p_notas">${escapeHTML(p.notas)}</textarea></div>
+      <div class="total-final">Total: <span id="totalPresuLive">${moneda(totalPresupuesto(p))}</span></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarPresu">Cancelar</button><button class="btn rosa" id="btnGuardarPresu">Guardar</button>`,
+    onAbrir:()=>{
+      function recalcular(){
+        const desc = Number(document.getElementById('p_descuento').value)||0;
+        const adic = Number(document.getElementById('p_adicionales').value)||0;
+        const sub = p.items.reduce((a,it)=>a+(Number(it.precio||0)*Number(it.cantidad||1)),0);
+        const total = sub - (sub*desc/100) + adic;
+        document.getElementById('totalPresuLive').textContent = moneda(total);
+      }
+      function reRenderItems(){
+        document.getElementById('itemsPresu').innerHTML = filasItems();
+        ligarEventosItems();
+        recalcular();
+      }
+      function ligarEventosItems(){
+        document.querySelectorAll('[data-item]').forEach(inp=>{
+          inp.oninput = ()=>{
+            const idx = Number(inp.dataset.idx); const campo = inp.dataset.item;
+            p.items[idx][campo] = campo==='cantidad'||campo==='precio' ? Number(inp.value) : inp.value;
+            recalcular();
+          };
+          inp.onchange = ()=>{
+            if(inp.dataset.item==='servicio'){
+              const s = STATE.servicios.find(x=>x.nombre===inp.value);
+              if(s){ p.items[Number(inp.dataset.idx)].precio = s.precioBase; reRenderItems(); }
+            }
+          };
+        });
+        document.querySelectorAll('[data-quitar-item]').forEach(b=>b.onclick=()=>{
+          if(p.items.length<=1){ toast('Debe quedar al menos un ítem','error'); return; }
+          p.items.splice(Number(b.dataset.quitarItem),1); reRenderItems();
+        });
+      }
+      ligarEventosItems();
+      document.getElementById('btnAgregarItem').onclick = ()=>{ p.items.push({servicio:'',descripcion:'',cantidad:1,precio:0}); reRenderItems(); };
+      document.getElementById('p_descuento').oninput = recalcular;
+      document.getElementById('p_adicionales').oninput = recalcular;
+      document.getElementById('btnCancelarPresu').onclick = cerrarModal;
+      document.getElementById('btnGuardarPresu').onclick = ()=>{
+        const cliente = val('p_cliente');
+        if(!cliente){ toast('El cliente es obligatorio','error'); return; }
+        const datos = {cliente, contacto:val('p_contacto'), estado:val('p_estado'), fecha:val('p_fecha'), validez:val('p_validez'),
+          items:p.items, descuento:Number(val('p_descuento'))||0, adicionales:Number(val('p_adicionales'))||0,
+          formaPago:val('p_formaPago'), condiciones:val('p_condiciones'), notas:val('p_notas'), numero:p.numero};
+        if(editando) Object.assign(p, datos); else STATE.presupuestos.push({id:uid('pre'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Presupuesto actualizado':'Presupuesto creado','exito');
+      };
+    }
+  });
+}
+
+function verPresupuesto(id){
+  const p = STATE.presupuestos.find(x=>x.id===id);
+  const logo = STATE.config.logoBase64
+    ? `<img src="${STATE.config.logoBase64}" style="max-height:50px;">`
+    : `<span class="logo-mark"><span class="t1" style="color:#0a0a0a;">trama</span><span class="t2" style="color:#c9899a;">studio</span></span>`;
+  const sub = p.items.reduce((a,it)=>a+(Number(it.precio||0)*Number(it.cantidad||1)),0);
+  const totalDesc = sub - (sub*(Number(p.descuento||0)/100));
+  const total = totalDesc + Number(p.adicionales||0);
+  abrirModal({
+    titulo:`Presupuesto #${p.numero}`, ancho:true,
+    cuerpoHTML:`
+      <div class="hoja-presupuesto" id="hojaImprimir">
+        <div class="logo-presu">${logo}</div>
+        <p class="texto-gris" style="font-size:0.78rem;">${escapeHTML(STATE.config.nombreAgencia)} · ${escapeHTML(STATE.config.correo)} · ${escapeHTML(STATE.config.telefono)}</p>
+        <h2 style="margin-top:20px;">Propuesta para ${escapeHTML(p.cliente)}</h2>
+        <p class="texto-gris" style="font-size:0.8rem;">Fecha: ${fechaVista(p.fecha)} · Válido hasta: ${fechaVista(p.validez)}</p>
+        <table>
+          <thead><tr><th>Servicio</th><th>Descripción</th><th>Cant.</th><th>Precio</th><th>Subtotal</th></tr></thead>
+          <tbody>${p.items.map(it=>`<tr><td>${escapeHTML(it.servicio)}</td><td>${escapeHTML(it.descripcion)}</td><td>${it.cantidad}</td><td>${moneda(it.precio)}</td><td>${moneda(it.precio*it.cantidad)}</td></tr>`).join('')}</tbody>
+        </table>
+        ${p.descuento?`<p>Descuento: ${p.descuento}%</p>`:''}
+        ${p.adicionales?`<p>Adicionales: ${moneda(p.adicionales)}</p>`:''}
+        <div class="total-final">Total: ${moneda(total)}</div>
+        <hr class="linea">
+        <p style="font-size:0.82rem;"><strong>Forma de pago:</strong> ${escapeHTML(p.formaPago)}</p>
+        <p style="font-size:0.82rem; margin-top:6px;"><strong>Condiciones:</strong> ${escapeHTML(p.condiciones)}</p>
+        <p style="font-size:0.8rem; margin-top:18px; font-style:italic; color:#8a8580;">Esta propuesta fue desarrollada especialmente para acompañar las necesidades y objetivos de la marca. Los valores pueden ajustarse en caso de modificarse el alcance, los entregables o la frecuencia del servicio.</p>
+        <p class="script" style="margin-top:24px; font-size:1.6rem;">trama studio</p>
+      </div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnImprimirPresu"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:14px;height:14px;">${iconoSvg('print')}</svg> Imprimir / PDF</button><button class="btn rosa" id="btnCerrarVer">Cerrar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCerrarVer').onclick = cerrarModal;
+      document.getElementById('btnImprimirPresu').onclick = ()=>{
+        const contenido = document.getElementById('hojaImprimir').outerHTML;
+        const w = window.open('', '_blank');
+        w.document.write(`<html><head><title>Presupuesto ${p.numero}</title><style>
+          body{font-family:'Raleway',sans-serif; padding:30px;} h2{font-family:'Times New Roman',serif;}
+          table{width:100%; border-collapse:collapse; margin:14px 0;} th,td{border:1px solid #ddd; padding:8px; text-align:left; font-size:13px;}
+          th{background:#0a0a0a; color:#fff;} .total-final{text-align:right; font-size:22px; margin-top:10px;}
+          .logo-mark{font-size:22px;} .t1{font-style:italic;} .t2{color:#c9899a; font-weight:700;}
+        </style></head><body>${contenido}</body></html>`);
+        w.document.close(); w.focus();
+        setTimeout(()=>w.print(), 300);
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   12. TAREAS
+--------------------------------------------------------------------- */
+const ESTADOS_TAREA = ['pendiente','en_proceso','en_revision','finalizada'];
+function estadoTareaLabel(e){ return {pendiente:'Pendiente', en_proceso:'En proceso', en_revision:'En revisión', finalizada:'Finalizada'}[e]||e; }
+let VISTA_TAREAS = 'kanban';
+let FILTRO_TAREAS = {cliente:'', prioridad:'', texto:''};
+
+function renderTareas(root){
+  const clientes = [...new Set(STATE.tareas.map(t=>t.cliente).filter(Boolean))];
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Tareas</h1><div class="sub">${STATE.tareas.filter(t=>t.estado!=='finalizada').length} pendientes de ${STATE.tareas.length} totales</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevaTarea"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nueva tarea</button></div>
+    </div>
+    <div class="toolbar">
+      <input type="text" id="ftTexto" placeholder="Buscar tarea…" value="${escapeHTML(FILTRO_TAREAS.texto)}">
+      <select id="ftCliente"><option value="">Todos los clientes</option>${clientes.map(c=>`<option ${FILTRO_TAREAS.cliente===c?'selected':''}>${escapeHTML(c)}</option>`).join('')}</select>
+      <select id="ftPrioridad"><option value="">Toda prioridad</option>${['baja','media','alta','urgente'].map(p=>`<option value="${p}" ${FILTRO_TAREAS.prioridad===p?'selected':''}>${capitaliza(p)}</option>`).join('')}</select>
+      <div class="vista-toggle">
+        <button data-v="kanban" class="${VISTA_TAREAS==='kanban'?'activo':''}">Kanban</button>
+        <button data-v="tabla" class="${VISTA_TAREAS==='tabla'?'activo':''}">Tabla</button>
+      </div>
+    </div>
+    <div id="tareasContenido"></div>
+  `;
+  document.getElementById('btnNuevaTarea').onclick = ()=>abrirFormTarea();
+  document.getElementById('ftTexto').oninput = (e)=>{FILTRO_TAREAS.texto=e.target.value; renderPagina();};
+  document.getElementById('ftCliente').onchange = (e)=>{FILTRO_TAREAS.cliente=e.target.value; renderPagina();};
+  document.getElementById('ftPrioridad').onchange = (e)=>{FILTRO_TAREAS.prioridad=e.target.value; renderPagina();};
+  root.querySelectorAll('.vista-toggle button').forEach(b=>b.onclick=()=>{VISTA_TAREAS=b.dataset.v; renderPagina();});
+
+  const tareasFiltradas = STATE.tareas.filter(t=>{
+    const okTexto = !FILTRO_TAREAS.texto || t.titulo.toLowerCase().includes(FILTRO_TAREAS.texto.toLowerCase());
+    const okCli = !FILTRO_TAREAS.cliente || t.cliente===FILTRO_TAREAS.cliente;
+    const okPrio = !FILTRO_TAREAS.prioridad || t.prioridad===FILTRO_TAREAS.prioridad;
+    return okTexto && okCli && okPrio;
+  });
+  const cont = document.getElementById('tareasContenido');
+  cont.innerHTML = VISTA_TAREAS==='kanban' ? renderKanbanTareas(tareasFiltradas) : renderTablaTareas(tareasFiltradas);
+  activarAccionesTareas(cont);
+  if(VISTA_TAREAS==='kanban') activarDragTareas(cont);
+}
+function renderKanbanTareas(lista){
+  return `<div class="kanban">${ESTADOS_TAREA.map(e=>{
+    const items = lista.filter(t=>t.estado===e);
+    return `<div class="kanban-col" data-estado="${e}">
+      <h4>${estadoTareaLabel(e)} <span>${items.length}</span></h4>
+      <div class="kanban-cards">${items.map(t=>`
+        <div class="kanban-card" draggable="true" data-id="${t.id}">
+          <div class="titulo-card">${escapeHTML(t.titulo)}</div>
+          <div class="texto-gris" style="font-size:0.72rem;">${escapeHTML(t.cliente||'General')}</div>
+          <div class="meta-card"><span class="pill ${t.prioridad}">${t.prioridad}</span><span>${fechaVista(t.fechaEntrega)}</span></div>
+        </div>`).join('')}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderTablaTareas(lista){
+  lista = [...lista].sort((a,b)=>(a.fechaEntrega||'').localeCompare(b.fechaEntrega||''));
+  if(lista.length===0) return `<div class="estado-vacio"><span class="script">Sin tareas</span></div>`;
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Tarea</th><th>Cliente</th><th>Categoría</th><th>Prioridad</th><th>Estado</th><th>Entrega</th><th></th></tr></thead>
+    <tbody>${lista.map(t=>`
+      <tr><td>${escapeHTML(t.titulo)}</td><td>${escapeHTML(t.cliente)||'—'}</td><td>${escapeHTML(t.categoria)}</td>
+      <td><span class="pill ${t.prioridad}">${capitaliza(t.prioridad)}</span></td><td><span class="pill ${t.estado.replace('_','')}">${estadoTareaLabel(t.estado)}</span></td>
+      <td>${fechaVista(t.fechaEntrega)}</td>
+      <td class="acciones-fila">
+        <button data-editar-tar="${t.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+        <button data-eliminar-tar="${t.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+      </td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function activarAccionesTareas(cont){
+  cont.querySelectorAll('.kanban-card').forEach(card=>card.onclick=()=>abrirFormTarea(card.dataset.id));
+  cont.querySelectorAll('[data-editar-tar]').forEach(b=>b.onclick=()=>abrirFormTarea(b.dataset.editarTar));
+  cont.querySelectorAll('[data-eliminar-tar]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar esta tarea?', ()=>{ STATE.tareas=STATE.tareas.filter(x=>x.id!==b.dataset.eliminarTar); marcarCambio(renderPagina); toast('Tarea eliminada','exito'); });
+  });
+}
+function activarDragTareas(cont){
+  let arrastrando = null;
+  cont.querySelectorAll('.kanban-card').forEach(card=>{
+    card.addEventListener('dragstart', ()=>{arrastrando=card.dataset.id; card.classList.add('arrastrando');});
+    card.addEventListener('dragend', ()=>card.classList.remove('arrastrando'));
+  });
+  cont.querySelectorAll('.kanban-col').forEach(col=>{
+    col.addEventListener('dragover', e=>{e.preventDefault(); col.classList.add('sobre');});
+    col.addEventListener('dragleave', ()=>col.classList.remove('sobre'));
+    col.addEventListener('drop', e=>{
+      e.preventDefault(); col.classList.remove('sobre');
+      const t = STATE.tareas.find(x=>x.id===arrastrando);
+      if(t){ t.estado = col.dataset.estado; marcarCambio(renderPagina); toast('Tarea movida a "'+estadoTareaLabel(t.estado)+'"','exito'); }
+    });
+  });
+}
+function abrirFormTarea(id){
+  const editando = !!id;
+  const t = editando ? STATE.tareas.find(x=>x.id===id) : {titulo:'',descripcion:'',cliente:'',responsable:STATE.config.responsable||'',categoria:'Diseño',prioridad:'media',estado:'pendiente',fechaCreacion:hoy(),fechaEntrega:hoy(),etiquetas:'',horasEstimadas:'',horasReales:'',notas:''};
+  const categorias = ['Diseño','Edición','Copy','Publicación','Producción','Reunión','Administración','Estrategia','Community Management','Finanzas','Seguimiento comercial'];
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar tarea':'Nueva tarea', ancho:true,
+    cuerpoHTML:`
+      <div class="campo"><label>Título <span class="req">*</span></label><input id="t_titulo" value="${escapeHTML(t.titulo)}"></div>
+      <div class="campo"><label>Descripción</label><textarea id="t_descripcion">${escapeHTML(t.descripcion)}</textarea></div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Cliente</label><input id="t_cliente" list="lista_clientes_t" value="${escapeHTML(t.cliente)}"><datalist id="lista_clientes_t">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Responsable</label><input id="t_responsable" value="${escapeHTML(t.responsable)}"></div>
+        <div class="campo"><label>Categoría</label><select id="t_categoria">${categorias.map(c=>`<option ${t.categoria===c?'selected':''}>${c}</option>`).join('')}</select></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Prioridad</label><select id="t_prioridad">${['baja','media','alta','urgente'].map(p=>`<option value="${p}" ${t.prioridad===p?'selected':''}>${capitaliza(p)}</option>`).join('')}</select></div>
+        <div class="campo"><label>Estado</label><select id="t_estado">${ESTADOS_TAREA.map(e=>`<option value="${e}" ${t.estado===e?'selected':''}>${estadoTareaLabel(e)}</option>`).join('')}</select></div>
+        <div class="campo"><label>Fecha de entrega</label><input type="date" id="t_fechaEntrega" value="${t.fechaEntrega}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Etiquetas</label><input id="t_etiquetas" value="${escapeHTML(t.etiquetas)}"></div>
+        <div class="campo"><label>Horas estimadas</label><input type="number" step="0.5" id="t_horasEstimadas" value="${t.horasEstimadas}"></div>
+        <div class="campo"><label>Horas reales</label><input type="number" step="0.5" id="t_horasReales" value="${t.horasReales}"></div>
+      </div>
+      <div class="campo"><label>Notas</label><textarea id="t_notas">${escapeHTML(t.notas)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarTar">Cancelar</button><button class="btn rosa" id="btnGuardarTar">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarTar').onclick = cerrarModal;
+      document.getElementById('btnGuardarTar').onclick = ()=>{
+        const titulo = val('t_titulo');
+        if(!titulo){ toast('El título es obligatorio','error'); return; }
+        const datos = {titulo, descripcion:val('t_descripcion'), cliente:val('t_cliente'), responsable:val('t_responsable'),
+          categoria:val('t_categoria'), prioridad:val('t_prioridad'), estado:val('t_estado'), fechaEntrega:val('t_fechaEntrega'),
+          etiquetas:val('t_etiquetas'), horasEstimadas:Number(val('t_horasEstimadas'))||0, horasReales:Number(val('t_horasReales'))||0, notas:val('t_notas')};
+        if(editando) Object.assign(t, datos); else STATE.tareas.push({id:uid('tar'), fechaCreacion:hoy(), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Tarea actualizada':'Tarea creada','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   13. CONFIGURACIÓN
+--------------------------------------------------------------------- */
+function renderConfiguracion(root){
+  const backups = JSON.parse(localStorage.getItem(LS_BACKUPS) || '[]');
+  root.innerHTML = `
+    <div class="pagina-header"><div><h1>Configuración</h1><div class="sub">Datos de la agencia, marca y respaldo de información</div></div></div>
+
+    <div class="subseccion">
+      <h3>Datos de la agencia</h3>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Nombre de la agencia</label><input id="cfg_nombreAgencia" value="${escapeHTML(STATE.config.nombreAgencia)}"></div>
+        <div class="campo"><label>Responsable</label><input id="cfg_responsable" value="${escapeHTML(STATE.config.responsable)}"></div>
+        <div class="campo"><label>Correo</label><input id="cfg_correo" value="${escapeHTML(STATE.config.correo)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Teléfono</label><input id="cfg_telefono" value="${escapeHTML(STATE.config.telefono)}"></div>
+        <div class="campo"><label>Instagram</label><input id="cfg_instagram" value="${escapeHTML(STATE.config.instagram)}"></div>
+        <div class="campo"><label>Sitio web</label><input id="cfg_sitioweb" value="${escapeHTML(STATE.config.sitioweb)}"></div>
+      </div>
+      <button class="btn rosa chico" id="btnGuardarDatosAgencia">Guardar datos</button>
+    </div>
+
+    <div class="subseccion">
+      <h3>Logo de TRAMA</h3>
+      <div class="logo-preview" id="logoPreview">
+        ${STATE.config.logoBase64 ? `<img src="${STATE.config.logoBase64}">` : `<span class="logo-mark"><span class="t1">trama</span><span class="t2">studio</span></span>`}
+      </div>
+      <input type="file" accept="image/*" id="inputLogo" style="display:none;">
+      <button class="btn outline chico" id="btnSubirLogo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">${iconoSvg('upload')}</svg> Cargar logo</button>
+      ${STATE.config.logoBase64 ? `<button class="btn peligro chico" id="btnQuitarLogo">Eliminar logo</button>` : ''}
+    </div>
+
+    <div class="subseccion">
+      <h3>Rentabilidad y horas</h3>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Valor de la hora de trabajo</label><input type="number" id="cfg_valorHora" value="${STATE.config.valorHora}"></div>
+        <div class="campo"><label>Costos fijos mensuales</label><input type="number" id="cfg_costosFijos" value="${STATE.config.costosFijos}"></div>
+        <div class="campo"><label>Objetivo de rentabilidad (%)</label><input type="number" id="cfg_objetivoRentabilidad" value="${STATE.config.objetivoRentabilidad}"></div>
+      </div>
+      <button class="btn rosa chico" id="btnGuardarRentabilidad">Guardar</button>
+    </div>
+
+    <div class="subseccion">
+      <h3>Presupuestos</h3>
+      <div class="campo"><label>Métodos de pago</label><input id="cfg_metodosPago" value="${escapeHTML(STATE.config.metodosPago)}"></div>
+      <div class="campo"><label>Condiciones predeterminadas</label><textarea id="cfg_condiciones">${escapeHTML(STATE.config.condicionesPresupuesto)}</textarea></div>
+      <button class="btn rosa chico" id="btnGuardarPresuCfg">Guardar</button>
+    </div>
+
+    <div class="subseccion">
+      <h3>Copias de seguridad</h3>
+      <div class="pagina-acciones" style="margin-bottom:16px;">
+        <button class="btn outline chico" id="btnCrearBackupManual">Crear copia manual</button>
+        <button class="btn outline chico" id="btnExportarJSON"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">${iconoSvg('download')}</svg> Exportar JSON</button>
+        <input type="file" accept="application/json" id="inputImportarJSON" style="display:none;">
+        <button class="btn outline chico" id="btnImportarJSON"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:13px;height:13px;">${iconoSvg('upload')}</svg> Importar JSON</button>
+      </div>
+      ${backups.length===0 ? `<p class="texto-gris" style="font-size:0.82rem;">Todavía no hay copias de seguridad guardadas.</p>` :
+      backups.map((b,idx)=>`<div class="backup-item"><span>${b.fecha} · ${b.hora} <span class="pill pendiente">${b.motivo}</span></span><button class="btn outline chico" data-restaurar="${idx}">Restaurar</button></div>`).join('')}
+    </div>
+
+    <div class="subseccion">
+      <h3>Zona de riesgo</h3>
+      <div class="pagina-acciones">
+        <button class="btn peligro chico" id="btnRestaurarEjemplo">Restaurar datos de ejemplo</button>
+        <button class="btn peligro chico" id="btnEliminarTodo">Eliminar todos los datos</button>
+      </div>
+    </div>
+  `;
+
+  document.getElementById('btnGuardarDatosAgencia').onclick = ()=>{
+    STATE.config.nombreAgencia = val('cfg_nombreAgencia'); STATE.config.responsable = val('cfg_responsable');
+    STATE.config.correo = val('cfg_correo'); STATE.config.telefono = val('cfg_telefono');
+    STATE.config.instagram = val('cfg_instagram'); STATE.config.sitioweb = val('cfg_sitioweb');
+    marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Datos de la agencia guardados','exito');
+  };
+  document.getElementById('btnGuardarRentabilidad').onclick = ()=>{
+    STATE.config.valorHora = Number(val('cfg_valorHora'))||0; STATE.config.costosFijos = Number(val('cfg_costosFijos'))||0;
+    STATE.config.objetivoRentabilidad = Number(val('cfg_objetivoRentabilidad'))||0;
+    marcarCambio(); toast('Valores de rentabilidad guardados','exito');
+  };
+  document.getElementById('btnGuardarPresuCfg').onclick = ()=>{
+    STATE.config.metodosPago = val('cfg_metodosPago'); STATE.config.condicionesPresupuesto = val('cfg_condiciones');
+    marcarCambio(); toast('Configuración de presupuestos guardada','exito');
+  };
+  document.getElementById('btnSubirLogo').onclick = ()=>document.getElementById('inputLogo').click();
+  document.getElementById('inputLogo').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      STATE.config.logoBase64 = ev.target.result;
+      marcarCambio(()=>{renderPagina(); renderSidebarLogo();});
+      toast('Logo cargado','exito');
+    };
+    reader.readAsDataURL(file);
+  };
+  const btnQuitar = document.getElementById('btnQuitarLogo');
+  if(btnQuitar) btnQuitar.onclick = ()=>confirmarAccion('¿Eliminar el logo cargado?', ()=>{
+    STATE.config.logoBase64=''; marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Logo eliminado','exito');
+  });
+
+  document.getElementById('btnCrearBackupManual').onclick = ()=>{ crearBackup('manual'); toast('Copia de seguridad creada','exito'); renderPagina(); };
+  document.getElementById('btnExportarJSON').onclick = ()=>{
+    const blob = new Blob([JSON.stringify(STATE,null,2)], {type:'application/json'});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a'); a.href=url; a.download=`trama-backup-${hoy()}.json`; a.click();
+    URL.revokeObjectURL(url); STATE._ultimaExportacion = fechaHoraStr(); toast('Copia exportada en JSON','exito');
+  };
+  document.getElementById('btnImportarJSON').onclick = ()=>document.getElementById('inputImportarJSON').click();
+  document.getElementById('inputImportarJSON').onchange = (e)=>{
+    const file = e.target.files[0]; if(!file) return;
+    const reader = new FileReader();
+    reader.onload = (ev)=>{
+      try{
+        const data = JSON.parse(ev.target.result);
+        if(!data || typeof data!=='object' || !data.clientes || !data.config){
+          toast('El archivo no tiene una estructura válida','error'); return;
+        }
+        confirmarAccion('¿Reemplazar todos los datos actuales por los del archivo importado?', ()=>{
+          crearBackup('antes de importar');
+          STATE = data; marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Datos importados correctamente','exito');
+        });
+      }catch(err){ toast('Error al leer el archivo JSON','error'); }
+    };
+    reader.readAsText(file);
+  };
+  root.querySelectorAll('[data-restaurar]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Restaurar esta copia de seguridad? Se reemplazarán los datos actuales.', ()=>{
+      const backupsAhora = JSON.parse(localStorage.getItem(LS_BACKUPS)||'[]');
+      const bk = backupsAhora[Number(b.dataset.restaurar)];
+      if(bk){ STATE = bk.data; marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Copia restaurada','exito'); }
+    });
+  });
+  document.getElementById('btnRestaurarEjemplo').onclick = ()=>{
+    confirmarAccion('¿Restaurar los datos de ejemplo? Se perderá la información actual no respaldada.', ()=>{
+      crearBackup('antes de restaurar ejemplo');
+      STATE = datosDeEjemplo(); marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Datos de ejemplo restaurados','exito');
+    });
+  };
+  document.getElementById('btnEliminarTodo').onclick = ()=>{
+    confirmarAccion('¿Eliminar TODOS los datos de la aplicación? Esta acción no se puede deshacer.', ()=>{
+      crearBackup('antes de eliminar todo');
+      STATE = datosDeEjemplo();
+      STATE.clientes=[]; STATE.oportunidades=[]; STATE.ingresos=[]; STATE.gastos=[]; STATE.presupuestos=[]; STATE.tareas=[];
+      marcarCambio(()=>{renderPagina(); renderSidebarLogo();}); toast('Todos los datos fueron eliminados','exito');
+    });
+  };
+}
+
+function renderSidebarLogo(){
+  const el = document.getElementById('logoMarkSidebar');
+  const cont = document.getElementById('sidebarLogo');
+  if(STATE.config.logoBase64){
+    cont.innerHTML = `<img src="${STATE.config.logoBase64}" class="logo-img" id="logoMarkSidebar">`;
+  } else {
+    cont.innerHTML = `<span class="logo-mark" id="logoMarkSidebar"><span class="t1">trama</span><span class="t2">studio</span></span>`;
+  }
+}
+
+/* ---------------------------------------------------------------------
+   14. BOTÓN "NUEVO" (accesos rápidos del header)
+--------------------------------------------------------------------- */
+function renderDropdownNuevo(){
+  const opciones = [
+    {label:'Cliente', fn:()=>abrirFormCliente()},
+    {label:'Oportunidad', fn:()=>abrirFormOportunidad()},
+    {label:'Ingreso', fn:()=>abrirFormIngreso()},
+    {label:'Gasto', fn:()=>abrirFormGasto()},
+    {label:'Presupuesto', fn:()=>abrirFormPresupuesto()},
+    {label:'Tarea', fn:()=>abrirFormTarea()},
+    {label:'Servicio', fn:()=>abrirFormServicio()},
+  ];
+  const dd = document.getElementById('dropdownNuevo');
+  dd.innerHTML = opciones.map((o,i)=>`<button data-op="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>${o.label}</button>`).join('');
+  dd.querySelectorAll('button').forEach((b,i)=>b.onclick=()=>{ dd.classList.remove('abierto'); opciones[i].fn(); });
+}
+document.getElementById('btnNuevo').addEventListener('click', (e)=>{
+  e.stopPropagation();
+  document.getElementById('dropdownNuevo').classList.toggle('abierto');
+});
+document.addEventListener('click', ()=>document.getElementById('dropdownNuevo').classList.remove('abierto'));
+
+/* ---------------------------------------------------------------------
+   15. BUSCADOR GLOBAL
+--------------------------------------------------------------------- */
+document.getElementById('buscadorGlobal').addEventListener('keydown', (e)=>{
+  if(e.key!=='Enter') return;
+  const t = e.target.value.trim().toLowerCase();
+  if(!t) return;
+  const cliente = STATE.clientes.find(c=>c.marca.toLowerCase().includes(t));
+  if(cliente){ irASeccion('clientes'); setTimeout(()=>abrirFichaCliente(cliente.id), 80); return; }
+  const tarea = STATE.tareas.find(x=>x.titulo.toLowerCase().includes(t));
+  if(tarea){ irASeccion('tareas'); return; }
+  const presu = STATE.presupuestos.find(p=>p.cliente.toLowerCase().includes(t));
+  if(presu){ irASeccion('presupuestos'); return; }
+  toast('Sin resultados para "'+e.target.value+'"');
+});
+
+/* ---------------------------------------------------------------------
+   16. MENÚ LATERAL / RESPONSIVE
+--------------------------------------------------------------------- */
+document.getElementById('btnColapsar').addEventListener('click', ()=>{
+  document.getElementById('sidebar').classList.toggle('colapsada');
+});
+document.getElementById('btnMenuMobile').addEventListener('click', ()=>{
+  document.getElementById('sidebar').classList.add('abierta');
+  document.getElementById('fondoMobile').classList.add('activo');
+});
+document.getElementById('fondoMobile').addEventListener('click', ()=>{
+  document.getElementById('sidebar').classList.remove('abierta');
+  document.getElementById('fondoMobile').classList.remove('activo');
+});
+
+/* ---------------------------------------------------------------------
+   17. GUARDADO MANUAL
+--------------------------------------------------------------------- */
+document.getElementById('btnGuardarManual').addEventListener('click', ()=>{
+  guardarEstadoReal(true);
+  toast('Todos los cambios fueron guardados correctamente.', 'exito');
+});
+
+/* ---------------------------------------------------------------------
+   18. INICIALIZACIÓN
+--------------------------------------------------------------------- */
+function iniciar(){
+  try{
+    cargarEstado();
+    document.getElementById('fechaActual').textContent = new Date().toLocaleDateString('es-AR',{weekday:'long', day:'numeric', month:'long', year:'numeric'});
+    renderSidebarLogo();
+    renderMenu();
+    renderDropdownNuevo();
+    renderPagina();
+    guardarEstadoReal(false);
+    // Autoguardado periódico de seguridad cada 60s si hay cambios en memoria distintos a lo guardado
+    setInterval(()=>{ if(CAMBIOS_PENDIENTES) guardarEstadoReal(false); }, 60000);
+  }catch(err){
+    console.error('Error al iniciar la aplicación', err);
+    document.getElementById('app').innerHTML = `<div style="padding:60px 30px; max-width:520px; margin:0 auto; text-align:center; font-family:Raleway, sans-serif;">
+      <h1 style="font-family:'Times New Roman',serif; font-size:1.6rem; margin-bottom:14px;">No se pudo iniciar el panel</h1>
+      <p style="color:#8a8580; font-size:0.9rem;">Probá recargar la página. Si el problema persiste, tocá el botón de feedback (👎) para avisarle al equipo de Claude.</p>
+    </div>`;
+  }
+}
+iniciar();
+</script>
+</body>
+</html>
