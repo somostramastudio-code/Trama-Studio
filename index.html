@@ -768,7 +768,9 @@ function renderPagina(){
     (renderers[SECCION_ACTUAL] || renderInicio)(p);
   }catch(err){
     console.error('Error al renderizar la sección', SECCION_ACTUAL, err);
-    p.innerHTML = '<div class="estado-vacio"><span class="script">Ups, algo no cargó bien</span><p>Hubo un problema al mostrar esta sección. Probá tocar otra sección del menú o recargar la página. Tus datos guardados no se ven afectados.</p></div>';
+    const detalle = escapeHTML((err && err.message) || String(err));
+    p.innerHTML = `<div class="estado-vacio"><span class="script">Ups, algo no cargó bien</span><p>Hubo un problema al mostrar esta sección. Probá tocar otra sección del menú o recargar la página. Tus datos guardados no se ven afectados.</p>
+      <p style="margin-top:14px; font-size:0.7rem; color:#a1352d; font-family:monospace; word-break:break-word;">Detalle técnico (sección "${SECCION_ACTUAL}"): ${detalle}</p></div>`;
   }
 }
 
@@ -3065,9 +3067,11 @@ function iniciar(){
     setInterval(()=>{ if(CAMBIOS_PENDIENTES) guardarEstadoReal(false); }, 60000);
   }catch(err){
     console.error('Error al iniciar la aplicación', err);
+    const detalle = escapeHTML((err && err.message) || String(err));
     document.getElementById('app').innerHTML = `<div style="padding:60px 30px; max-width:520px; margin:0 auto; text-align:center; font-family:Raleway, sans-serif;">
       <h1 style="font-family:'Times New Roman',serif; font-size:1.6rem; margin-bottom:14px;">No se pudo iniciar el panel</h1>
-      <p style="color:#8a8580; font-size:0.9rem;">Probá recargar la página. Si el problema persiste, tocá el botón de feedback (👎) para avisarle al equipo de Claude.</p>
+      <p style="color:#8a8580; font-size:0.9rem;">Probá recargar la página. Si el problema persiste, mandá una captura de este detalle:</p>
+      <p style="margin-top:14px; font-size:0.7rem; color:#a1352d; font-family:monospace; word-break:break-word;">${detalle}</p>
     </div>`;
   }
 }
