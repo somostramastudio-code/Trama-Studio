@@ -186,8 +186,9 @@ nav.menu{flex:1; overflow-y:auto; padding:8px 0 16px 0;}
 .card.acento{border-color:var(--rosa-fuerte); background:var(--rosa-suave);}
 
 .grid-2{display:grid; grid-template-columns:1.3fr 1fr; gap:20px; margin-bottom:28px;}
+.grid-2.grid-cal{grid-template-columns:2.4fr 1fr;}
 .grid-3col{display:grid; grid-template-columns:repeat(3,1fr); gap:16px;}
-@media(max-width:1000px){.grid-2{grid-template-columns:1fr;} .grid-3col{grid-template-columns:1fr;}}
+@media(max-width:1000px){.grid-2{grid-template-columns:1fr;} .grid-2.grid-cal{grid-template-columns:1fr;} .grid-3col{grid-template-columns:1fr;}}
 
 .panel{background:#fff; border:1px solid var(--gris-linea); border-radius:var(--radio); padding:20px 22px; box-shadow:var(--sombra);}
 .panel h3{font-size:1.05rem; margin-bottom:14px; font-weight:400;}
@@ -353,6 +354,33 @@ tbody tr:last-child td{border-bottom:none;}
 .fondo-mobile.activo{display:block;}
 
 .checklist-item{display:flex; align-items:center; gap:8px; padding:6px 0; font-size:0.82rem;}
+
+/* ---------- Calendario ---------- */
+.cal-grid-header{display:grid; grid-template-columns:repeat(7,1fr); gap:4px; margin-bottom:6px;}
+.cal-grid-header div{text-align:center; font-size:0.68rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--gris);}
+.cal-grid{display:grid; grid-template-columns:repeat(7,1fr); gap:4px;}
+.cal-celda{
+  min-height:84px; border:1px solid var(--gris-linea); border-radius:var(--radio); padding:6px; cursor:pointer;
+  display:flex; flex-direction:column; background:#fff; transition:background var(--transicion);
+}
+.cal-celda:hover{background:var(--rosa-suave);}
+.cal-celda.vacia{border:none; cursor:default; background:transparent;}
+.cal-celda.hoy{border-color:var(--rosa-fuerte); background:var(--rosa-suave);}
+.cal-num{font-size:0.75rem; font-weight:600; margin-bottom:4px;}
+.cal-eventos{display:flex; flex-direction:column; gap:3px; overflow:hidden;}
+.cal-evento{
+  font-size:0.62rem; color:#fff; padding:2px 5px; border-radius:3px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;
+}
+.cal-mas{font-size:0.6rem; color:var(--gris);}
+.cal-semana{display:grid; grid-template-columns:repeat(7,1fr); gap:6px;}
+.cal-col-semana{border:1px solid var(--gris-linea); border-radius:var(--radio); padding:8px; min-height:160px;}
+.cal-col-semana.hoy{border-color:var(--rosa-fuerte); background:var(--rosa-suave);}
+.cal-col-header{font-size:0.7rem; text-transform:capitalize; color:var(--gris); margin-bottom:8px; text-align:center;}
+.cal-col-eventos{display:flex; flex-direction:column; gap:5px;}
+@media(max-width:880px){
+  .cal-celda{min-height:60px;}
+  .cal-evento{font-size:0.55rem;}
+}
 .checklist-item input{width:auto;}
 
 .oculto{display:none !important;}
@@ -548,6 +576,11 @@ function datosDeEjemplo(){
       {id:uid('tar'), titulo:'Plan de contenido agosto Ricordo', descripcion:'', cliente:'Ricordo', responsable:'Oriana', categoria:'Estrategia', prioridad:'alta', estado:'en_proceso', fechaCreacion:'2026-07-21', fechaEntrega:'2026-07-30', etiquetas:'', horasEstimadas:3, horasReales:1, notas:''},
       {id:uid('tar'), titulo:'Seguimiento Bruma', descripcion:'Retomar contacto post temporada.', cliente:'', responsable:'Oriana', categoria:'Seguimiento comercial', prioridad:'baja', estado:'pendiente', fechaCreacion:'2026-07-15', fechaEntrega:'2026-08-05', etiquetas:'', horasEstimadas:0.5, horasReales:0, notas:''},
     ],
+    eventos: [],
+    producciones: [],
+    contenidos: [],
+    metricas: [],
+    registroHoras: [],
     contador: {presupuesto: 4},
   };
 }
@@ -650,6 +683,11 @@ const SECCIONES = [
   {id:'presupuestos', label:'Presupuestos', icon:'file-text'},
   {id:'servicios', label:'Servicios', icon:'layers'},
   {id:'tareas', label:'Tareas', icon:'check-square'},
+  {id:'calendario', label:'Calendario', icon:'calendar'},
+  {id:'producciones', label:'Producciones', icon:'camera'},
+  {id:'contenido', label:'Contenido', icon:'edit-3'},
+  {id:'metricas', label:'Métricas', icon:'bar-chart'},
+  {id:'rentabilidad', label:'Rentabilidad', icon:'trending-up'},
   {id:'configuracion', label:'Configuración', icon:'settings'},
 ];
 let SECCION_ACTUAL = 'inicio';
@@ -672,6 +710,17 @@ function iconoSvg(nombre){
     'print':'<path d="M6 9V2h12v7"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/>',
     'download':'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M7 10l5 5 5-5"/><path d="M12 15V3"/>',
     'upload':'<path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/><path d="M17 8l-5-5-5 5"/><path d="M12 3v12"/>',
+    'calendar':'<rect x="3" y="4" width="18" height="18" rx="2"/><path d="M16 2v4M8 2v4M3 10h18"/>',
+    'chevron-left':'<path d="M15 18l-6-6 6-6"/>',
+    'chevron-right':'<path d="M9 18l6-6-6-6"/>',
+    'camera':'<path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/>',
+    'edit-3':'<path d="M12 20h9"/><path d="M16.5 3.5a2.12 2.12 0 013 3L7 19l-4 1 1-4z"/>',
+    'bar-chart':'<path d="M12 20V10M18 20V4M6 20v-4"/>',
+    'trending-up':'<path d="M23 6l-9.5 9.5-5-5L1 18"/><path d="M17 6h6v6"/>',
+    'clock':'<circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/>',
+    'play':'<polygon points="5 3 19 12 5 21 5 3"/>',
+    'pause':'<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>',
+    'square':'<rect x="3" y="3" width="18" height="18" rx="2"/>',
   };
   return mapa[nombre] || mapa['home'];
 }
@@ -707,6 +756,11 @@ function renderPagina(){
     presupuestos: renderPresupuestos,
     servicios: renderServicios,
     tareas: renderTareas,
+    calendario: renderCalendario,
+    producciones: renderProducciones,
+    contenido: renderContenido,
+    metricas: renderMetricas,
+    rentabilidad: renderRentabilidad,
     configuracion: renderConfiguracion,
   };
   p.innerHTML = '';
@@ -1935,6 +1989,841 @@ function abrirFormTarea(id){
 }
 
 /* ---------------------------------------------------------------------
+   12b. CALENDARIO
+--------------------------------------------------------------------- */
+const TIPOS_EVENTO = ['Publicación','Producción','Reunión','Fecha de entrega','Vencimiento','Seguimiento comercial','Evento','Recordatorio'];
+const COLORES_TIPO = {
+  'Publicación':'#ecb6c1','Producción':'#f6cfd6','Reunión':'#0a0a0a','Fecha de entrega':'#c9899a',
+  'Vencimiento':'#a1352d','Seguimiento comercial':'#8a6a2f','Evento':'#4d7a48','Recordatorio':'#8a8580',
+};
+let VISTA_CALENDARIO = 'mensual';
+let MES_CALENDARIO = hoy().slice(0,7);
+let FILTRO_CAL = {cliente:'', tipo:''};
+
+function eventosFiltrados(){
+  return STATE.eventos.filter(e=>{
+    const okCli = !FILTRO_CAL.cliente || e.cliente===FILTRO_CAL.cliente;
+    const okTipo = !FILTRO_CAL.tipo || e.tipo===FILTRO_CAL.tipo;
+    return okCli && okTipo;
+  });
+}
+
+function renderCalendario(root){
+  const clientesConEventos = [...new Set(STATE.eventos.map(e=>e.cliente).filter(Boolean))];
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Calendario</h1><div class="sub">Publicaciones, producciones, reuniones y vencimientos</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevoEvento"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo evento</button></div>
+    </div>
+    <div class="toolbar">
+      <select id="fCalCliente"><option value="">Todos los clientes</option>${clientesConEventos.map(c=>`<option ${FILTRO_CAL.cliente===c?'selected':''}>${escapeHTML(c)}</option>`).join('')}</select>
+      <select id="fCalTipo"><option value="">Todos los tipos</option>${TIPOS_EVENTO.map(t=>`<option ${FILTRO_CAL.tipo===t?'selected':''}>${t}</option>`).join('')}</select>
+      <div class="vista-toggle">
+        <button data-v="mensual" class="${VISTA_CALENDARIO==='mensual'?'activo':''}">Mensual</button>
+        <button data-v="semanal" class="${VISTA_CALENDARIO==='semanal'?'activo':''}">Semanal</button>
+        <button data-v="lista" class="${VISTA_CALENDARIO==='lista'?'activo':''}">Lista</button>
+      </div>
+    </div>
+    <div class="grid-2 grid-cal">
+      <div id="calContenido"></div>
+      <div class="panel">
+        <h3>Próximos eventos</h3>
+        ${renderProximosEventos()}
+      </div>
+    </div>
+  `;
+  document.getElementById('btnNuevoEvento').onclick = ()=>abrirFormEvento();
+  document.getElementById('fCalCliente').onchange = (e)=>{FILTRO_CAL.cliente=e.target.value; renderPagina();};
+  document.getElementById('fCalTipo').onchange = (e)=>{FILTRO_CAL.tipo=e.target.value; renderPagina();};
+  root.querySelectorAll('.vista-toggle button').forEach(b=>b.onclick=()=>{VISTA_CALENDARIO=b.dataset.v; renderPagina();});
+
+  const cont = document.getElementById('calContenido');
+  if(VISTA_CALENDARIO==='mensual') cont.innerHTML = renderVistaMensual();
+  else if(VISTA_CALENDARIO==='semanal') cont.innerHTML = renderVistaSemanal();
+  else cont.innerHTML = renderVistaListaEventos();
+  activarAccionesCalendario(cont);
+}
+
+function renderProximosEventos(){
+  const proximos = eventosFiltrados().filter(e=>e.fecha>=hoy()).sort((a,b)=>a.fecha.localeCompare(b.fecha)).slice(0,6);
+  if(proximos.length===0) return `<div class="estado-vacio"><span class="script">Sin eventos próximos</span></div>`;
+  return `<ul class="lista-simple">${proximos.map(e=>`
+    <li><div style="display:flex; align-items:center; gap:8px;"><span style="width:8px;height:8px;border-radius:50%;background:${e.color||COLORES_TIPO[e.tipo]||'#8a8580'};flex-shrink:0;"></span>
+    <div><div class="nombre">${escapeHTML(e.titulo)}</div><div class="detalle">${escapeHTML(e.cliente||e.tipo)} · ${fechaVista(e.fecha)}${e.horario?' · '+e.horario:''}</div></div></div></li>`).join('')}</ul>`;
+}
+
+function renderVistaMensual(){
+  const [anio, mes] = MES_CALENDARIO.split('-').map(Number);
+  const primerDia = new Date(anio, mes-1, 1);
+  const ultimoDia = new Date(anio, mes, 0);
+  const diasEnMes = ultimoDia.getDate();
+  const offsetInicio = (primerDia.getDay()+6)%7; // lunes=0
+  const eventos = eventosFiltrados();
+  const nombreMes = primerDia.toLocaleDateString('es-AR',{month:'long', year:'numeric'});
+
+  let celdas = '';
+  for(let i=0;i<offsetInicio;i++) celdas += `<div class="cal-celda vacia"></div>`;
+  for(let d=1; d<=diasEnMes; d++){
+    const fechaISO = `${anio}-${String(mes).padStart(2,'0')}-${String(d).padStart(2,'0')}`;
+    const evDia = eventos.filter(e=>e.fecha===fechaISO);
+    const esHoy = fechaISO===hoy();
+    celdas += `<div class="cal-celda ${esHoy?'hoy':''}" data-fecha="${fechaISO}">
+      <div class="cal-num">${d}</div>
+      <div class="cal-eventos">${evDia.slice(0,3).map(e=>`<div class="cal-evento" style="background:${e.color||COLORES_TIPO[e.tipo]||'#8a8580'}" data-id="${e.id}" title="${escapeHTML(e.titulo)}">${escapeHTML(e.titulo)}</div>`).join('')}
+      ${evDia.length>3?`<div class="cal-mas">+${evDia.length-3} más</div>`:''}</div>
+    </div>`;
+  }
+  return `
+    <div class="panel">
+      <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:14px;">
+        <button class="icon-btn" id="calMesAnterior"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('chevron-left')}</svg></button>
+        <h3 style="text-transform:capitalize; margin:0;">${nombreMes}</h3>
+        <button class="icon-btn" id="calMesSiguiente"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('chevron-right')}</svg></button>
+      </div>
+      <div class="cal-grid-header">${['L','M','X','J','V','S','D'].map(d=>`<div>${d}</div>`).join('')}</div>
+      <div class="cal-grid">${celdas}</div>
+    </div>
+  `;
+}
+
+function renderVistaSemanal(){
+  const hoyD = new Date();
+  const diaSemana = (hoyD.getDay()+6)%7;
+  const lunes = new Date(hoyD); lunes.setDate(hoyD.getDate()-diaSemana);
+  const eventos = eventosFiltrados();
+  let cols = '';
+  for(let i=0;i<7;i++){
+    const d = new Date(lunes); d.setDate(lunes.getDate()+i);
+    const fechaISO = d.toISOString().slice(0,10);
+    const evDia = eventos.filter(e=>e.fecha===fechaISO);
+    const esHoy = fechaISO===hoy();
+    cols += `<div class="cal-col-semana ${esHoy?'hoy':''}" data-fecha="${fechaISO}">
+      <div class="cal-col-header">${d.toLocaleDateString('es-AR',{weekday:'short'})} <strong>${d.getDate()}</strong></div>
+      <div class="cal-col-eventos">
+        ${evDia.length===0?`<p class="texto-gris" style="font-size:0.7rem;">Sin eventos</p>`:evDia.map(e=>`<div class="cal-evento" style="background:${e.color||COLORES_TIPO[e.tipo]||'#8a8580'}" data-id="${e.id}">${escapeHTML(e.titulo)}${e.horario?' · '+e.horario:''}</div>`).join('')}
+      </div>
+    </div>`;
+  }
+  return `<div class="panel"><h3>Semana del ${fechaVista(lunes.toISOString().slice(0,10))}</h3><div class="cal-semana">${cols}</div></div>`;
+}
+
+function renderVistaListaEventos(){
+  const eventos = [...eventosFiltrados()].sort((a,b)=>a.fecha.localeCompare(b.fecha));
+  if(eventos.length===0) return `<div class="estado-vacio"><span class="script">Sin eventos</span><p>Creá tu primer evento para verlo acá.</p></div>`;
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Fecha</th><th>Título</th><th>Cliente</th><th>Tipo</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${eventos.map(e=>`
+      <tr><td>${fechaVista(e.fecha)}${e.horario?' · '+e.horario:''}</td><td>${escapeHTML(e.titulo)}</td><td>${escapeHTML(e.cliente)||'—'}</td>
+      <td><span class="pill pendiente">${escapeHTML(e.tipo)}</span></td><td>${escapeHTML(e.estado)||'—'}</td>
+      <td class="acciones-fila">
+        <button data-editar-evt="${e.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+        <button data-eliminar-evt="${e.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+      </td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+
+function activarAccionesCalendario(cont){
+  const btnAnt = document.getElementById('calMesAnterior');
+  const btnSig = document.getElementById('calMesSiguiente');
+  if(btnAnt) btnAnt.onclick = ()=>{ const [a,m]=MES_CALENDARIO.split('-').map(Number); const d=new Date(a,m-2,1); MES_CALENDARIO=d.toISOString().slice(0,7); renderPagina(); };
+  if(btnSig) btnSig.onclick = ()=>{ const [a,m]=MES_CALENDARIO.split('-').map(Number); const d=new Date(a,m,1); MES_CALENDARIO=d.toISOString().slice(0,7); renderPagina(); };
+  cont.querySelectorAll('.cal-celda[data-fecha]').forEach(celda=>{
+    celda.addEventListener('click', (e)=>{
+      if(e.target.closest('.cal-evento')) return;
+      abrirFormEvento(null, celda.dataset.fecha);
+    });
+  });
+  cont.querySelectorAll('.cal-evento[data-id]').forEach(ev=>{
+    ev.addEventListener('click', (e)=>{ e.stopPropagation(); abrirFormEvento(ev.dataset.id); });
+  });
+  cont.querySelectorAll('[data-editar-evt]').forEach(b=>b.onclick=()=>abrirFormEvento(b.dataset.editarEvt));
+  cont.querySelectorAll('[data-eliminar-evt]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este evento?', ()=>{
+      STATE.eventos = STATE.eventos.filter(x=>x.id!==b.dataset.eliminarEvt);
+      marcarCambio(renderPagina); toast('Evento eliminado','exito');
+    });
+  });
+}
+
+function abrirFormEvento(id, fechaPrefill){
+  const editando = !!id;
+  const e = editando ? STATE.eventos.find(x=>x.id===id) : {
+    titulo:'', cliente:'', tipo:'Evento', fecha:fechaPrefill||hoy(), horario:'', descripcion:'',
+    estado:'Programado', color:COLORES_TIPO['Evento'], recordatorio:false
+  };
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar evento':'Nuevo evento', ancho:true,
+    cuerpoHTML:`
+      <div class="campo"><label>Título <span class="req">*</span></label><input id="e_titulo" value="${escapeHTML(e.titulo)}"></div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Cliente</label><input id="e_cliente" list="lista_clientes_e" value="${escapeHTML(e.cliente)}"><datalist id="lista_clientes_e">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Tipo</label><select id="e_tipo">${TIPOS_EVENTO.map(t=>`<option ${e.tipo===t?'selected':''}>${t}</option>`).join('')}</select></div>
+        <div class="campo"><label>Estado</label><select id="e_estado">${['Programado','Confirmado','Realizado','Cancelado','Pendiente'].map(s=>`<option ${e.estado===s?'selected':''}>${s}</option>`).join('')}</select></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Fecha</label><input type="date" id="e_fecha" value="${e.fecha}"></div>
+        <div class="campo"><label>Horario</label><input type="time" id="e_horario" value="${e.horario}"></div>
+      </div>
+      <div class="campo"><label>Descripción</label><textarea id="e_descripcion">${escapeHTML(e.descripcion)}</textarea></div>
+      <div class="campo">
+        <label>Recordatorio</label>
+        <div class="checklist-item"><input type="checkbox" id="e_recordatorio" ${e.recordatorio?'checked':''}><span>Marcar con recordatorio destacado</span></div>
+      </div>
+    `,
+    footerHTML:`${editando?`<button class="btn peligro" id="btnEliminarEventoModal">Eliminar</button>`:''}<button class="btn outline" id="btnCancelarEvt">Cancelar</button><button class="btn rosa" id="btnGuardarEvt">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarEvt').onclick = cerrarModal;
+      const btnElim = document.getElementById('btnEliminarEventoModal');
+      if(btnElim) btnElim.onclick = ()=>{
+        confirmarAccion('¿Eliminar este evento?', ()=>{
+          STATE.eventos = STATE.eventos.filter(x=>x.id!==e.id);
+          cerrarModal(); marcarCambio(renderPagina); toast('Evento eliminado','exito');
+        });
+      };
+      document.getElementById('btnGuardarEvt').onclick = ()=>{
+        const titulo = val('e_titulo');
+        if(!titulo){ toast('El título es obligatorio','error'); return; }
+        const tipo = val('e_tipo');
+        const datos = {titulo, cliente:val('e_cliente'), tipo, estado:val('e_estado'), fecha:val('e_fecha'),
+          horario:val('e_horario'), descripcion:val('e_descripcion'), color:COLORES_TIPO[tipo]||'#8a8580',
+          recordatorio: document.getElementById('e_recordatorio').checked};
+        if(editando) Object.assign(e, datos); else STATE.eventos.push({id:uid('evt'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Evento actualizado':'Evento creado','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   14. PRODUCCIONES
+--------------------------------------------------------------------- */
+const ESTADOS_PRODUCCION = ['Idea','Planificación','Confirmada','Realizada','En edición','Entregada'];
+const CHECKLIST_PRODUCCION = [
+  ['conceptoAprobado','Concepto aprobado'], ['moodboardPreparado','Moodboard preparado'],
+  ['locacionConfirmada','Locación confirmada'], ['productosDisponibles','Productos disponibles'],
+  ['vestuarioPreparado','Vestuario preparado'], ['propsPreparados','Props preparados'],
+  ['shotListPreparado','Shot list preparado'], ['equipoCargado','Equipo cargado'],
+  ['produccionRealizada','Producción realizada'], ['materialSeleccionado','Material seleccionado'],
+  ['edicionFinalizada','Edición finalizada'], ['contenidoEntregado','Contenido entregado'],
+];
+let VISTA_PRODUCCIONES = 'kanban';
+let FILTRO_PROD = {cliente:''};
+
+function renderProducciones(root){
+  const clientes = [...new Set(STATE.producciones.map(p=>p.cliente).filter(Boolean))];
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Producciones</h1><div class="sub">${STATE.producciones.length} producciones registradas</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevaProduccion"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nueva producción</button></div>
+    </div>
+    <div class="toolbar">
+      <select id="fProdCliente"><option value="">Todos los clientes</option>${clientes.map(c=>`<option ${FILTRO_PROD.cliente===c?'selected':''}>${escapeHTML(c)}</option>`).join('')}</select>
+      <div class="vista-toggle">
+        <button data-v="kanban" class="${VISTA_PRODUCCIONES==='kanban'?'activo':''}">Kanban</button>
+        <button data-v="tabla" class="${VISTA_PRODUCCIONES==='tabla'?'activo':''}">Tabla</button>
+      </div>
+    </div>
+    <div id="prodContenido"></div>
+  `;
+  document.getElementById('btnNuevaProduccion').onclick = ()=>abrirFormProduccion();
+  document.getElementById('fProdCliente').onchange = (e)=>{FILTRO_PROD.cliente=e.target.value; renderPagina();};
+  root.querySelectorAll('.vista-toggle button').forEach(b=>b.onclick=()=>{VISTA_PRODUCCIONES=b.dataset.v; renderPagina();});
+
+  const lista = STATE.producciones.filter(p=>!FILTRO_PROD.cliente || p.cliente===FILTRO_PROD.cliente);
+  const cont = document.getElementById('prodContenido');
+  if(lista.length===0){
+    cont.innerHTML = `<div class="estado-vacio"><span class="script">Sin producciones</span><p>Registrá tu primera producción para organizar fotos y contenido.</p></div>`;
+    return;
+  }
+  cont.innerHTML = VISTA_PRODUCCIONES==='kanban' ? renderKanbanProducciones(lista) : renderTablaProducciones(lista);
+  activarAccionesProducciones(cont);
+  if(VISTA_PRODUCCIONES==='kanban') activarDragProducciones(cont);
+}
+function renderKanbanProducciones(lista){
+  return `<div class="kanban">${ESTADOS_PRODUCCION.map(e=>{
+    const items = lista.filter(p=>p.estado===e);
+    return `<div class="kanban-col" data-estado="${e}">
+      <h4>${e} <span>${items.length}</span></h4>
+      <div class="kanban-cards">${items.map(p=>`
+        <div class="kanban-card" draggable="true" data-id="${p.id}">
+          <div class="titulo-card">${escapeHTML(p.nombre)}</div>
+          <div class="texto-gris" style="font-size:0.72rem;">${escapeHTML(p.cliente||'')}</div>
+          <div class="meta-card"><span>${p.fecha?fechaVista(p.fecha):''}</span><span>${p.presupuestoAsignado?moneda(p.presupuestoAsignado):''}</span></div>
+        </div>`).join('')}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderTablaProducciones(lista){
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Nombre</th><th>Cliente</th><th>Fecha</th><th>Estado</th><th>Presupuesto</th><th>Gastos reales</th><th>Rentabilidad</th><th></th></tr></thead>
+    <tbody>${lista.map(p=>{
+      const rent = Number(p.presupuestoAsignado||0) - Number(p.gastosReales||0);
+      return `<tr><td><strong>${escapeHTML(p.nombre)}</strong></td><td>${escapeHTML(p.cliente)||'—'}</td><td>${p.fecha?fechaVista(p.fecha):'—'}</td>
+      <td><span class="pill pendiente">${escapeHTML(p.estado)}</span></td><td>${p.presupuestoAsignado?moneda(p.presupuestoAsignado):'—'}</td>
+      <td>${p.gastosReales?moneda(p.gastosReales):'—'}</td><td style="color:${rent<0?'#a1352d':'inherit'};">${(p.presupuestoAsignado||p.gastosReales)?moneda(rent):'—'}</td>
+      <td class="acciones-fila">
+        <button data-editar-prod="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+        <button data-eliminar-prod="${p.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+      </td></tr>`;
+    }).join('')}</tbody>
+  </table></div>`;
+}
+function activarAccionesProducciones(cont){
+  cont.querySelectorAll('.kanban-card').forEach(card=>card.onclick=()=>abrirFormProduccion(card.dataset.id));
+  cont.querySelectorAll('[data-editar-prod]').forEach(b=>b.onclick=()=>abrirFormProduccion(b.dataset.editarProd));
+  cont.querySelectorAll('[data-eliminar-prod]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar esta producción?', ()=>{
+      STATE.producciones = STATE.producciones.filter(x=>x.id!==b.dataset.eliminarProd);
+      marcarCambio(renderPagina); toast('Producción eliminada','exito');
+    });
+  });
+}
+function activarDragProducciones(cont){
+  let arrastrando = null;
+  cont.querySelectorAll('.kanban-card').forEach(card=>{
+    card.addEventListener('dragstart', ()=>{arrastrando=card.dataset.id; card.classList.add('arrastrando');});
+    card.addEventListener('dragend', ()=>card.classList.remove('arrastrando'));
+  });
+  cont.querySelectorAll('.kanban-col').forEach(col=>{
+    col.addEventListener('dragover', e=>{e.preventDefault(); col.classList.add('sobre');});
+    col.addEventListener('dragleave', ()=>col.classList.remove('sobre'));
+    col.addEventListener('drop', e=>{
+      e.preventDefault(); col.classList.remove('sobre');
+      const p = STATE.producciones.find(x=>x.id===arrastrando);
+      if(p){ p.estado = col.dataset.estado; marcarCambio(renderPagina); toast('Producción movida a "'+p.estado+'"','exito'); }
+    });
+  });
+}
+function abrirFormProduccion(id){
+  const editando = !!id;
+  const p = editando ? STATE.producciones.find(x=>x.id===id) : {
+    nombre:'', cliente:'', fecha:hoy(), horario:'', ubicacion:'', objetivo:'', conceptoCreativo:'', tipoContenido:'',
+    cantidadFotos:'', cantidadVideos:'', looks:'', productos:'', props:'', uteleria:'', equipo:'', materialPendiente:'',
+    estado:'Idea', presupuestoAsignado:'', gastosReales:'', notas:'', linksReferencia:'', linkMoodboard:'', linkDrive:'', linkCanva:'',
+    checklist:{}
+  };
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar producción':'Nueva producción', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos">
+        <div class="campo"><label>Nombre <span class="req">*</span></label><input id="pr_nombre" value="${escapeHTML(p.nombre)}"></div>
+        <div class="campo"><label>Cliente</label><input id="pr_cliente" list="lista_clientes_pr" value="${escapeHTML(p.cliente)}"><datalist id="lista_clientes_pr">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Fecha</label><input type="date" id="pr_fecha" value="${p.fecha}"></div>
+        <div class="campo"><label>Horario</label><input type="time" id="pr_horario" value="${p.horario}"></div>
+        <div class="campo"><label>Ubicación</label><input id="pr_ubicacion" value="${escapeHTML(p.ubicacion)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Objetivo</label><input id="pr_objetivo" value="${escapeHTML(p.objetivo)}"></div>
+        <div class="campo"><label>Concepto creativo</label><input id="pr_conceptoCreativo" value="${escapeHTML(p.conceptoCreativo)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Tipo de contenido</label><input id="pr_tipoContenido" value="${escapeHTML(p.tipoContenido)}" placeholder="Fotos, video, ambos"></div>
+        <div class="campo"><label>Cantidad de fotografías</label><input type="number" id="pr_cantidadFotos" value="${p.cantidadFotos}"></div>
+        <div class="campo"><label>Cantidad de videos</label><input type="number" id="pr_cantidadVideos" value="${p.cantidadVideos}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Looks</label><input id="pr_looks" value="${escapeHTML(p.looks)}"></div>
+        <div class="campo"><label>Productos</label><input id="pr_productos" value="${escapeHTML(p.productos)}"></div>
+        <div class="campo"><label>Props / utilería</label><input id="pr_props" value="${escapeHTML(p.props)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Equipo involucrado</label><input id="pr_equipo" value="${escapeHTML(p.equipo)}"></div>
+        <div class="campo"><label>Material pendiente</label><input id="pr_materialPendiente" value="${escapeHTML(p.materialPendiente)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Estado</label><select id="pr_estado">${ESTADOS_PRODUCCION.map(e=>`<option ${p.estado===e?'selected':''}>${e}</option>`).join('')}</select></div>
+        <div class="campo"><label>Presupuesto asignado</label><input type="number" id="pr_presupuestoAsignado" value="${p.presupuestoAsignado}"></div>
+        <div class="campo"><label>Gastos reales</label><input type="number" id="pr_gastosReales" value="${p.gastosReales}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Link moodboard</label><input id="pr_linkMoodboard" value="${escapeHTML(p.linkMoodboard)}"></div>
+        <div class="campo"><label>Link Google Drive</label><input id="pr_linkDrive" value="${escapeHTML(p.linkDrive)}"></div>
+        <div class="campo"><label>Link Canva</label><input id="pr_linkCanva" value="${escapeHTML(p.linkCanva)}"></div>
+      </div>
+      <div class="campo"><label>Links de referencia</label><input id="pr_linksReferencia" value="${escapeHTML(p.linksReferencia)}"></div>
+      <div class="campo"><label>Notas</label><textarea id="pr_notas">${escapeHTML(p.notas)}</textarea></div>
+      <hr class="linea">
+      <label style="display:block; font-size:0.72rem; text-transform:uppercase; letter-spacing:0.05em; color:var(--gris); margin-bottom:6px;">Checklist de producción</label>
+      <div class="grid-3col">
+        ${CHECKLIST_PRODUCCION.map(([key,label])=>`<div class="checklist-item"><input type="checkbox" id="pr_chk_${key}" ${p.checklist && p.checklist[key]?'checked':''}><span>${label}</span></div>`).join('')}
+      </div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarProd">Cancelar</button><button class="btn rosa" id="btnGuardarProd">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarProd').onclick = cerrarModal;
+      document.getElementById('btnGuardarProd').onclick = ()=>{
+        const nombre = val('pr_nombre');
+        if(!nombre){ toast('El nombre es obligatorio','error'); return; }
+        const checklist = {};
+        CHECKLIST_PRODUCCION.forEach(([key])=>{ checklist[key] = document.getElementById('pr_chk_'+key).checked; });
+        const datos = {
+          nombre, cliente:val('pr_cliente'), fecha:val('pr_fecha'), horario:val('pr_horario'), ubicacion:val('pr_ubicacion'),
+          objetivo:val('pr_objetivo'), conceptoCreativo:val('pr_conceptoCreativo'), tipoContenido:val('pr_tipoContenido'),
+          cantidadFotos:Number(val('pr_cantidadFotos'))||0, cantidadVideos:Number(val('pr_cantidadVideos'))||0,
+          looks:val('pr_looks'), productos:val('pr_productos'), props:val('pr_props'), equipo:val('pr_equipo'),
+          materialPendiente:val('pr_materialPendiente'), estado:val('pr_estado'),
+          presupuestoAsignado:Number(val('pr_presupuestoAsignado'))||0, gastosReales:Number(val('pr_gastosReales'))||0,
+          notas:val('pr_notas'), linksReferencia:val('pr_linksReferencia'), linkMoodboard:val('pr_linkMoodboard'),
+          linkDrive:val('pr_linkDrive'), linkCanva:val('pr_linkCanva'), checklist,
+        };
+        if(editando) Object.assign(p, datos); else STATE.producciones.push({id:uid('prod'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Producción actualizada':'Producción creada','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   15. CONTENIDO
+--------------------------------------------------------------------- */
+const PLATAFORMAS = ['Instagram','TikTok','Facebook','LinkedIn','Otra'];
+const FORMATOS_CONTENIDO = ['Reel','Carrusel','Historia','Post','TikTok','Video','Fotografía','Otro'];
+const ESTADOS_CONTENIDO = ['Idea','En producción','En diseño','En edición','Esperando aprobación','Aprobado','Programado','Publicado'];
+let VISTA_CONTENIDO = 'kanban';
+let FILTRO_CONT = {cliente:'', plataforma:''};
+
+function renderContenido(root){
+  const clientes = [...new Set(STATE.contenidos.map(c=>c.cliente).filter(Boolean))];
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Contenido</h1><div class="sub">${STATE.contenidos.length} piezas planificadas</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevoContenido"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Nuevo contenido</button></div>
+    </div>
+    <div class="toolbar">
+      <select id="fContCliente"><option value="">Todos los clientes</option>${clientes.map(c=>`<option ${FILTRO_CONT.cliente===c?'selected':''}>${escapeHTML(c)}</option>`).join('')}</select>
+      <select id="fContPlataforma"><option value="">Todas las plataformas</option>${PLATAFORMAS.map(p=>`<option ${FILTRO_CONT.plataforma===p?'selected':''}>${p}</option>`).join('')}</select>
+      <div class="vista-toggle">
+        <button data-v="kanban" class="${VISTA_CONTENIDO==='kanban'?'activo':''}">Kanban</button>
+        <button data-v="tabla" class="${VISTA_CONTENIDO==='tabla'?'activo':''}">Tabla</button>
+      </div>
+    </div>
+    <div id="contContenido"></div>
+  `;
+  document.getElementById('btnNuevoContenido').onclick = ()=>abrirFormContenido();
+  document.getElementById('fContCliente').onchange = (e)=>{FILTRO_CONT.cliente=e.target.value; renderPagina();};
+  document.getElementById('fContPlataforma').onchange = (e)=>{FILTRO_CONT.plataforma=e.target.value; renderPagina();};
+  root.querySelectorAll('.vista-toggle button').forEach(b=>b.onclick=()=>{VISTA_CONTENIDO=b.dataset.v; renderPagina();});
+
+  const lista = STATE.contenidos.filter(c=>(!FILTRO_CONT.cliente||c.cliente===FILTRO_CONT.cliente) && (!FILTRO_CONT.plataforma||c.plataforma===FILTRO_CONT.plataforma));
+  const cont = document.getElementById('contContenido');
+  if(lista.length===0){
+    cont.innerHTML = `<div class="estado-vacio"><span class="script">Sin contenido planificado</span><p>Creá tu primera pieza de contenido.</p></div>`;
+    return;
+  }
+  cont.innerHTML = VISTA_CONTENIDO==='kanban' ? renderKanbanContenido(lista) : renderTablaContenido(lista);
+  activarAccionesContenido(cont);
+  if(VISTA_CONTENIDO==='kanban') activarDragContenido(cont);
+}
+function renderKanbanContenido(lista){
+  return `<div class="kanban">${ESTADOS_CONTENIDO.map(e=>{
+    const items = lista.filter(c=>c.estado===e);
+    return `<div class="kanban-col" data-estado="${e}">
+      <h4>${e} <span>${items.length}</span></h4>
+      <div class="kanban-cards">${items.map(c=>`
+        <div class="kanban-card" draggable="true" data-id="${c.id}">
+          <div class="titulo-card">${escapeHTML(c.tema||c.formato)}</div>
+          <div class="texto-gris" style="font-size:0.72rem;">${escapeHTML(c.cliente||'')} · ${escapeHTML(c.plataforma)}</div>
+          <div class="meta-card"><span>${escapeHTML(c.formato)}</span><span>${c.fecha?fechaVista(c.fecha):''}</span></div>
+        </div>`).join('')}</div>
+    </div>`;
+  }).join('')}</div>`;
+}
+function renderTablaContenido(lista){
+  return `<div class="tabla-wrap"><table>
+    <thead><tr><th>Tema</th><th>Cliente</th><th>Plataforma</th><th>Formato</th><th>Fecha</th><th>Estado</th><th></th></tr></thead>
+    <tbody>${lista.map(c=>`
+      <tr><td>${escapeHTML(c.tema)||'—'}</td><td>${escapeHTML(c.cliente)||'—'}</td><td>${escapeHTML(c.plataforma)}</td><td>${escapeHTML(c.formato)}</td>
+      <td>${c.fecha?fechaVista(c.fecha):'—'}</td><td><span class="pill pendiente">${escapeHTML(c.estado)}</span></td>
+      <td class="acciones-fila">
+        <button data-editar-cont="${c.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+        <button data-eliminar-cont="${c.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+      </td></tr>`).join('')}</tbody>
+  </table></div>`;
+}
+function activarAccionesContenido(cont){
+  cont.querySelectorAll('.kanban-card').forEach(card=>card.onclick=()=>abrirFormContenido(card.dataset.id));
+  cont.querySelectorAll('[data-editar-cont]').forEach(b=>b.onclick=()=>abrirFormContenido(b.dataset.editarCont));
+  cont.querySelectorAll('[data-eliminar-cont]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este contenido?', ()=>{
+      STATE.contenidos = STATE.contenidos.filter(x=>x.id!==b.dataset.eliminarCont);
+      marcarCambio(renderPagina); toast('Contenido eliminado','exito');
+    });
+  });
+}
+function activarDragContenido(cont){
+  let arrastrando = null;
+  cont.querySelectorAll('.kanban-card').forEach(card=>{
+    card.addEventListener('dragstart', ()=>{arrastrando=card.dataset.id; card.classList.add('arrastrando');});
+    card.addEventListener('dragend', ()=>card.classList.remove('arrastrando'));
+  });
+  cont.querySelectorAll('.kanban-col').forEach(col=>{
+    col.addEventListener('dragover', e=>{e.preventDefault(); col.classList.add('sobre');});
+    col.addEventListener('dragleave', ()=>col.classList.remove('sobre'));
+    col.addEventListener('drop', e=>{
+      e.preventDefault(); col.classList.remove('sobre');
+      const c = STATE.contenidos.find(x=>x.id===arrastrando);
+      if(c){ c.estado = col.dataset.estado; marcarCambio(renderPagina); toast('Contenido movido a "'+c.estado+'"','exito'); }
+    });
+  });
+}
+function abrirFormContenido(id){
+  const editando = !!id;
+  const c = editando ? STATE.contenidos.find(x=>x.id===id) : {
+    cliente:'', plataforma:'Instagram', formato:'Post', tema:'', objetivo:'', ideaPrincipal:'', caption:'', cta:'',
+    fecha:hoy(), horario:'', materialNecesario:'', linkCanva:'', linkArchivoFinal:'', responsable:STATE.config.responsable||'',
+    estado:'Idea', produccionRelacionada:'', observaciones:''
+  };
+  const nombresClientes = STATE.clientes.map(cl=>cl.marca);
+  abrirModal({
+    titulo: editando?'Editar contenido':'Nuevo contenido', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos tres">
+        <div class="campo"><label>Cliente</label><input id="co_cliente" list="lista_clientes_co" value="${escapeHTML(c.cliente)}"><datalist id="lista_clientes_co">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Plataforma</label><select id="co_plataforma">${PLATAFORMAS.map(p=>`<option ${c.plataforma===p?'selected':''}>${p}</option>`).join('')}</select></div>
+        <div class="campo"><label>Formato</label><select id="co_formato">${FORMATOS_CONTENIDO.map(f=>`<option ${c.formato===f?'selected':''}>${f}</option>`).join('')}</select></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Tema</label><input id="co_tema" value="${escapeHTML(c.tema)}"></div>
+        <div class="campo"><label>Objetivo</label><input id="co_objetivo" value="${escapeHTML(c.objetivo)}"></div>
+      </div>
+      <div class="campo"><label>Idea principal</label><textarea id="co_ideaPrincipal">${escapeHTML(c.ideaPrincipal)}</textarea></div>
+      <div class="campo"><label>Caption</label><textarea id="co_caption">${escapeHTML(c.caption)}</textarea></div>
+      <div class="fila-campos">
+        <div class="campo"><label>Llamado a la acción</label><input id="co_cta" value="${escapeHTML(c.cta)}"></div>
+        <div class="campo"><label>Material necesario</label><input id="co_materialNecesario" value="${escapeHTML(c.materialNecesario)}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Fecha</label><input type="date" id="co_fecha" value="${c.fecha}"></div>
+        <div class="campo"><label>Horario</label><input type="time" id="co_horario" value="${c.horario}"></div>
+        <div class="campo"><label>Responsable</label><input id="co_responsable" value="${escapeHTML(c.responsable)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Link Canva</label><input id="co_linkCanva" value="${escapeHTML(c.linkCanva)}"></div>
+        <div class="campo"><label>Link archivo final</label><input id="co_linkArchivoFinal" value="${escapeHTML(c.linkArchivoFinal)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Estado</label><select id="co_estado">${ESTADOS_CONTENIDO.map(e=>`<option ${c.estado===e?'selected':''}>${e}</option>`).join('')}</select></div>
+        <div class="campo"><label>Producción relacionada</label><input id="co_produccionRelacionada" list="lista_prod_co" value="${escapeHTML(c.produccionRelacionada)}"><datalist id="lista_prod_co">${STATE.producciones.map(p=>`<option value="${escapeHTML(p.nombre)}">`).join('')}</datalist></div>
+      </div>
+      <div class="campo"><label>Observaciones</label><textarea id="co_observaciones">${escapeHTML(c.observaciones)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarCont">Cancelar</button><button class="btn rosa" id="btnGuardarCont">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarCont').onclick = cerrarModal;
+      document.getElementById('btnGuardarCont').onclick = ()=>{
+        const tema = val('co_tema');
+        const datos = {
+          cliente:val('co_cliente'), plataforma:val('co_plataforma'), formato:val('co_formato'), tema,
+          objetivo:val('co_objetivo'), ideaPrincipal:val('co_ideaPrincipal'), caption:val('co_caption'), cta:val('co_cta'),
+          fecha:val('co_fecha'), horario:val('co_horario'), materialNecesario:val('co_materialNecesario'),
+          linkCanva:val('co_linkCanva'), linkArchivoFinal:val('co_linkArchivoFinal'), responsable:val('co_responsable'),
+          estado:val('co_estado'), produccionRelacionada:val('co_produccionRelacionada'), observaciones:val('co_observaciones'),
+        };
+        if(editando) Object.assign(c, datos); else STATE.contenidos.push({id:uid('cont'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Contenido actualizado':'Contenido creado','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   16. MÉTRICAS
+--------------------------------------------------------------------- */
+function renderMetricas(root){
+  const clientes = [...new Set(STATE.metricas.map(m=>m.cliente).filter(Boolean))];
+  const registros = [...STATE.metricas].sort((a,b)=>(b.mes||'').localeCompare(a.mes||''));
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Métricas</h1><div class="sub">Resultados de redes sociales por cliente y mes</div></div>
+      <div class="pagina-acciones"><button class="btn rosa" id="btnNuevaMetrica"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Cargar métrica</button></div>
+    </div>
+    ${registros.length===0 ? `<div class="estado-vacio"><span class="script">Sin métricas cargadas</span><p>Cargá el primer registro mensual de un cliente para empezar a ver comparaciones.</p></div>` : `
+    <div class="tabla-wrap"><table>
+      <thead><tr><th>Mes</th><th>Cliente</th><th>Seguidores</th><th>Crecimiento</th><th>Alcance</th><th>Interacciones</th><th>Engagement</th><th></th></tr></thead>
+      <tbody>${registros.map(m=>{
+        const crecimiento = Number(m.seguidoresIniciales)>0 ? (((Number(m.seguidoresFinales)-Number(m.seguidoresIniciales))/Number(m.seguidoresIniciales))*100).toFixed(1) : '0';
+        const engagement = Number(m.seguidoresFinales)>0 ? ((Number(m.interacciones||0)/Number(m.seguidoresFinales))*100).toFixed(1) : '0';
+        return `<tr><td>${m.mes||'—'}</td><td>${escapeHTML(m.cliente)}</td><td>${m.seguidoresFinales||'—'}</td>
+        <td style="color:${crecimiento<0?'#a1352d':'#4d7a48'};">${crecimiento}%</td><td>${m.alcance||'—'}</td><td>${m.interacciones||'—'}</td><td>${engagement}%</td>
+        <td class="acciones-fila">
+          <button data-editar-met="${m.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('edit')}</svg></button>
+          <button data-eliminar-met="${m.id}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('trash')}</svg></button>
+        </td></tr>`;
+      }).join('')}</tbody>
+    </table></div>
+    <div class="grid-2" style="margin-top:24px;">
+      <div class="panel"><h3>Crecimiento de seguidores por mes</h3><canvas id="chartCrecimiento" height="230"></canvas></div>
+      <div class="panel"><h3>Comparación de alcance por cliente</h3><canvas id="chartAlcanceCliente" height="230"></canvas></div>
+    </div>
+    `}
+  `;
+  document.getElementById('btnNuevaMetrica').onclick = ()=>abrirFormMetrica();
+  root.querySelectorAll('[data-editar-met]').forEach(b=>b.onclick=()=>abrirFormMetrica(b.dataset.editarMet));
+  root.querySelectorAll('[data-eliminar-met]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este registro de métricas?', ()=>{
+      STATE.metricas = STATE.metricas.filter(x=>x.id!==b.dataset.eliminarMet);
+      marcarCambio(renderPagina); toast('Registro eliminado','exito');
+    });
+  });
+  if(registros.length>0) setTimeout(()=>{
+    if(typeof Chart === 'undefined') return;
+    const porCliente = {};
+    registros.forEach(m=>{ (porCliente[m.cliente] = porCliente[m.cliente]||[]).push(m); });
+    const ctx1 = document.getElementById('chartCrecimiento');
+    if(ctx1){
+      const datasets = Object.entries(porCliente).slice(0,5).map(([cliente, regs], i)=>{
+        const ordenados = [...regs].sort((a,b)=>(a.mes||'').localeCompare(b.mes||''));
+        return {label:cliente, data:ordenados.map(r=>Number(r.seguidoresFinales)||0), borderColor:['#0a0a0a','#ecb6c1','#c9899a','#8a8580','#4d7a48'][i%5], fill:false, tension:0.3};
+      });
+      const meses = [...new Set(registros.map(r=>r.mes))].sort();
+      new Chart(ctx1, {type:'line', data:{labels:meses, datasets}, options:{plugins:{legend:{position:'bottom', labels:{font:{size:10}}}}}});
+    }
+    const ctx2 = document.getElementById('chartAlcanceCliente');
+    if(ctx2){
+      const ultimoPorCliente = Object.entries(porCliente).map(([cliente,regs])=>{
+        const ultimo = [...regs].sort((a,b)=>(b.mes||'').localeCompare(a.mes||''))[0];
+        return [cliente, Number(ultimo.alcance)||0];
+      });
+      new Chart(ctx2, {type:'bar', data:{labels:ultimoPorCliente.map(c=>c[0]), datasets:[{label:'Alcance', data:ultimoPorCliente.map(c=>c[1]), backgroundColor:'#ecb6c1'}]}, options:{plugins:{legend:{display:false}}}});
+    }
+  },0);
+}
+function abrirFormMetrica(id){
+  const editando = !!id;
+  const m = editando ? STATE.metricas.find(x=>x.id===id) : {
+    cliente:'', mes:hoy().slice(0,7), seguidoresIniciales:'', seguidoresFinales:'', alcance:'', impresiones:'',
+    visitasPerfil:'', interacciones:'', likes:'', comentarios:'', compartidos:'', guardados:'', mensajes:'',
+    consultas:'', reservas:'', ventas:'', mejorPublicacion:'', observaciones:''
+  };
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar métrica':'Cargar métrica mensual', ancho:true,
+    cuerpoHTML:`
+      <div class="fila-campos">
+        <div class="campo"><label>Cliente <span class="req">*</span></label><input id="m_cliente" list="lista_clientes_m" value="${escapeHTML(m.cliente)}"><datalist id="lista_clientes_m">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Mes</label><input type="month" id="m_mes" value="${m.mes}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Seguidores iniciales</label><input type="number" id="m_seguidoresIniciales" value="${m.seguidoresIniciales}"></div>
+        <div class="campo"><label>Seguidores finales</label><input type="number" id="m_seguidoresFinales" value="${m.seguidoresFinales}"></div>
+        <div class="campo"><label>Alcance</label><input type="number" id="m_alcance" value="${m.alcance}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Impresiones</label><input type="number" id="m_impresiones" value="${m.impresiones}"></div>
+        <div class="campo"><label>Visitas al perfil</label><input type="number" id="m_visitasPerfil" value="${m.visitasPerfil}"></div>
+        <div class="campo"><label>Interacciones</label><input type="number" id="m_interacciones" value="${m.interacciones}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Likes</label><input type="number" id="m_likes" value="${m.likes}"></div>
+        <div class="campo"><label>Comentarios</label><input type="number" id="m_comentarios" value="${m.comentarios}"></div>
+        <div class="campo"><label>Compartidos</label><input type="number" id="m_compartidos" value="${m.compartidos}"></div>
+      </div>
+      <div class="fila-campos tres">
+        <div class="campo"><label>Guardados</label><input type="number" id="m_guardados" value="${m.guardados}"></div>
+        <div class="campo"><label>Mensajes recibidos</label><input type="number" id="m_mensajes" value="${m.mensajes}"></div>
+        <div class="campo"><label>Consultas</label><input type="number" id="m_consultas" value="${m.consultas}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Reservas generadas</label><input type="number" id="m_reservas" value="${m.reservas}"></div>
+        <div class="campo"><label>Ventas / conversiones</label><input type="number" id="m_ventas" value="${m.ventas}"></div>
+      </div>
+      <div class="campo"><label>Publicación con mejor rendimiento</label><input id="m_mejorPublicacion" value="${escapeHTML(m.mejorPublicacion)}"></div>
+      <div class="campo"><label>Observaciones</label><textarea id="m_observaciones">${escapeHTML(m.observaciones)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarMet">Cancelar</button><button class="btn rosa" id="btnGuardarMet">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarMet').onclick = cerrarModal;
+      document.getElementById('btnGuardarMet').onclick = ()=>{
+        const cliente = val('m_cliente');
+        if(!cliente){ toast('El cliente es obligatorio','error'); return; }
+        const datos = {
+          cliente, mes:val('m_mes'), seguidoresIniciales:Number(val('m_seguidoresIniciales'))||0, seguidoresFinales:Number(val('m_seguidoresFinales'))||0,
+          alcance:Number(val('m_alcance'))||0, impresiones:Number(val('m_impresiones'))||0, visitasPerfil:Number(val('m_visitasPerfil'))||0,
+          interacciones:Number(val('m_interacciones'))||0, likes:Number(val('m_likes'))||0, comentarios:Number(val('m_comentarios'))||0,
+          compartidos:Number(val('m_compartidos'))||0, guardados:Number(val('m_guardados'))||0, mensajes:Number(val('m_mensajes'))||0,
+          consultas:Number(val('m_consultas'))||0, reservas:Number(val('m_reservas'))||0, ventas:Number(val('m_ventas'))||0,
+          mejorPublicacion:val('m_mejorPublicacion'), observaciones:val('m_observaciones'),
+        };
+        if(editando) Object.assign(m, datos); else STATE.metricas.push({id:uid('met'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Métrica actualizada':'Métrica cargada','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
+   17. RENTABILIDAD Y CONTROL DE HORAS
+--------------------------------------------------------------------- */
+let MES_RENTABILIDAD = hoy().slice(0,7);
+let CRONOMETRO = {activo:false, inicioTS:null, cliente:'', tarea:'', intervalId:null};
+
+function renderRentabilidad(root){
+  const valorHora = Number(STATE.config.valorHora)||0;
+  const clientesConMovimiento = [...new Set([
+    ...STATE.ingresos.filter(i=>i.mes===MES_RENTABILIDAD).map(i=>i.cliente),
+    ...STATE.registroHoras.filter(h=>h.fecha && h.fecha.slice(0,7)===MES_RENTABILIDAD).map(h=>h.cliente),
+  ].filter(Boolean))];
+
+  const filas = clientesConMovimiento.map(cliente=>{
+    const ingreso = STATE.ingresos.filter(i=>i.cliente===cliente && i.mes===MES_RENTABILIDAD).reduce((a,i)=>a+Number(i.importe||0),0);
+    const gastos = STATE.gastos.filter(g=>g.cliente===cliente && g.fecha && g.fecha.slice(0,7)===MES_RENTABILIDAD).reduce((a,g)=>a+Number(g.importe||0),0);
+    const horas = STATE.registroHoras.filter(h=>h.cliente===cliente && h.fecha && h.fecha.slice(0,7)===MES_RENTABILIDAD).reduce((a,h)=>a+Number(h.horas||0),0);
+    const costoHoras = horas*valorHora;
+    const gananciaReal = ingreso - gastos - costoHoras;
+    const margen = ingreso>0 ? (gananciaReal/ingreso*100) : 0;
+    return {cliente, ingreso, gastos, horas, costoHoras, gananciaReal, margen};
+  }).sort((a,b)=>b.gananciaReal-a.gananciaReal);
+
+  const opciones = [];
+  const hoyD = new Date();
+  for(let i=-5;i<=1;i++){
+    const d = new Date(hoyD.getFullYear(), hoyD.getMonth()+i, 1);
+    const val = d.toISOString().slice(0,7);
+    opciones.push(`<option value="${val}" ${val===MES_RENTABILIDAD?'selected':''}>${d.toLocaleDateString('es-AR',{month:'long', year:'numeric'})}</option>`);
+  }
+
+  const tareasConHoras = STATE.tareas.filter(t=>Number(t.horasEstimadas)>0 || Number(t.horasReales)>0);
+  const diffHoras = tareasConHoras.map(t=>({titulo:t.titulo, estimadas:Number(t.horasEstimadas)||0, reales:Number(t.horasReales)||0, dif:(Number(t.horasReales)||0)-(Number(t.horasEstimadas)||0)}))
+    .sort((a,b)=>Math.abs(b.dif)-Math.abs(a.dif)).slice(0,8);
+
+  root.innerHTML = `
+    <div class="pagina-header">
+      <div><h1>Rentabilidad y horas</h1><div class="sub">Margen real por cliente y control de tiempo trabajado</div></div>
+      <div class="pagina-acciones">
+        <label class="texto-gris" style="font-size:0.78rem; margin-right:6px;">Mes:</label>
+        <select id="selectorMesRent">${opciones.join('')}</select>
+        <button class="btn rosa" id="btnCargarHoras"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>Cargar horas</button>
+      </div>
+    </div>
+
+    <div class="panel" style="margin-bottom:24px;">
+      <h3>Cronómetro</h3>
+      <div class="fila-campos tres" style="align-items:end;">
+        <div class="campo"><label>Cliente</label><input id="cr_cliente" list="lista_clientes_cr" ${CRONOMETRO.activo?'disabled':''} value="${escapeHTML(CRONOMETRO.cliente)}"><datalist id="lista_clientes_cr">${STATE.clientes.map(c=>`<option value="${escapeHTML(c.marca)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Tarea (opcional)</label><input id="cr_tarea" ${CRONOMETRO.activo?'disabled':''} value="${escapeHTML(CRONOMETRO.tarea)}"></div>
+        <div class="campo" style="display:flex; align-items:center; gap:10px;">
+          <span id="cronoTiempo" class="editorial" style="font-size:1.5rem;">00:00:00</span>
+          ${CRONOMETRO.activo
+            ? `<button class="btn peligro chico" id="btnDetenerCrono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;">${iconoSvg('square')}</svg> Detener</button>`
+            : `<button class="btn rosa chico" id="btnIniciarCrono"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="width:12px;height:12px;">${iconoSvg('play')}</svg> Iniciar</button>`}
+        </div>
+      </div>
+    </div>
+
+    ${filas.length===0 ? `<div class="estado-vacio"><span class="script">Sin movimientos este mes</span><p>Cuando registres ingresos y horas para este mes, la rentabilidad por cliente va a aparecer acá.</p></div>` : `
+    <div class="tabla-wrap" style="margin-bottom:24px;"><table>
+      <thead><tr><th>Cliente</th><th>Ingreso</th><th>Gastos</th><th>Horas</th><th>Costo de horas</th><th>Ganancia real</th><th>Margen</th></tr></thead>
+      <tbody>${filas.map(f=>`
+        <tr><td><strong>${escapeHTML(f.cliente)}</strong></td><td>${moneda(f.ingreso)}</td><td>${moneda(f.gastos)}</td>
+        <td>${f.horas}h</td><td>${moneda(f.costoHoras)}</td>
+        <td style="color:${f.gananciaReal<0?'#a1352d':'#4d7a48'};">${moneda(f.gananciaReal)}</td><td>${f.margen.toFixed(0)}%</td></tr>`).join('')}</tbody>
+    </table></div>`}
+
+    <div class="grid-2">
+      <div class="panel">
+        <h3>Diferencia horas estimadas vs. reales</h3>
+        ${diffHoras.length===0 ? `<div class="estado-vacio"><p>Cargá horas estimadas y reales en Tareas para ver esta comparación.</p></div>` :
+        `<ul class="lista-simple">${diffHoras.map(t=>`<li><div class="nombre">${escapeHTML(t.titulo)}</div><div style="text-align:right;"><div class="detalle">${t.estimadas}h est. / ${t.reales}h real</div><span class="pill ${t.dif>0?'vencido':'cobrado'}">${t.dif>0?'+':''}${t.dif}h</span></div></li>`).join('')}</ul>`}
+      </div>
+      <div class="panel">
+        <h3>Registro de horas — ${MES_RENTABILIDAD}</h3>
+        ${renderListaRegistroHoras()}
+      </div>
+    </div>
+  `;
+
+  document.getElementById('selectorMesRent').onchange = (e)=>{ MES_RENTABILIDAD = e.target.value; renderPagina(); };
+  document.getElementById('btnCargarHoras').onclick = ()=>abrirFormHoras();
+  root.querySelectorAll('[data-editar-hora]').forEach(b=>b.onclick=()=>abrirFormHoras(b.dataset.editarHora));
+  root.querySelectorAll('[data-eliminar-hora]').forEach(b=>b.onclick=()=>{
+    confirmarAccion('¿Eliminar este registro de horas?', ()=>{
+      STATE.registroHoras = STATE.registroHoras.filter(x=>x.id!==b.dataset.eliminarHora);
+      marcarCambio(renderPagina); toast('Registro eliminado','exito');
+    });
+  });
+
+  const btnIniciar = document.getElementById('btnIniciarCrono');
+  if(btnIniciar) btnIniciar.onclick = ()=>{
+    const cliente = val('cr_cliente');
+    if(!cliente){ toast('Elegí un cliente para iniciar el cronómetro','error'); return; }
+    CRONOMETRO.activo = true; CRONOMETRO.inicioTS = Date.now(); CRONOMETRO.cliente = cliente; CRONOMETRO.tarea = val('cr_tarea');
+    renderPagina();
+    iniciarTickCronometro();
+  };
+  const btnDetener = document.getElementById('btnDetenerCrono');
+  if(btnDetener) btnDetener.onclick = ()=>{
+    const segundos = Math.round((Date.now()-CRONOMETRO.inicioTS)/1000);
+    const horas = Math.round((segundos/3600)*100)/100;
+    if(CRONOMETRO.intervalId) clearInterval(CRONOMETRO.intervalId);
+    if(horas>0){
+      STATE.registroHoras.push({id:uid('hor'), cliente:CRONOMETRO.cliente, tarea:CRONOMETRO.tarea, fecha:hoy(), horas, notas:'Registrado con cronómetro'});
+      marcarCambio();
+      toast(`Se registraron ${horas}h para ${CRONOMETRO.cliente}`,'exito');
+    }
+    CRONOMETRO = {activo:false, inicioTS:null, cliente:'', tarea:'', intervalId:null};
+    renderPagina();
+  };
+  if(CRONOMETRO.activo) iniciarTickCronometro();
+}
+function iniciarTickCronometro(){
+  if(CRONOMETRO.intervalId) clearInterval(CRONOMETRO.intervalId);
+  const actualizar = ()=>{
+    const el = document.getElementById('cronoTiempo');
+    if(!el || !CRONOMETRO.activo){ if(CRONOMETRO.intervalId) clearInterval(CRONOMETRO.intervalId); return; }
+    const segundos = Math.floor((Date.now()-CRONOMETRO.inicioTS)/1000);
+    const h = String(Math.floor(segundos/3600)).padStart(2,'0');
+    const m = String(Math.floor((segundos%3600)/60)).padStart(2,'0');
+    const s = String(segundos%60).padStart(2,'0');
+    el.textContent = `${h}:${m}:${s}`;
+  };
+  actualizar();
+  CRONOMETRO.intervalId = setInterval(actualizar, 1000);
+}
+function renderListaRegistroHoras(){
+  const lista = STATE.registroHoras.filter(h=>h.fecha && h.fecha.slice(0,7)===MES_RENTABILIDAD).sort((a,b)=>(b.fecha||'').localeCompare(a.fecha||''));
+  if(lista.length===0) return `<div class="estado-vacio"><p>Sin horas registradas este mes.</p></div>`;
+  return `<ul class="lista-simple">${lista.map(h=>`
+    <li><div><div class="nombre">${escapeHTML(h.cliente)}</div><div class="detalle">${escapeHTML(h.tarea)||'—'} · ${fechaVista(h.fecha)}</div></div>
+    <div style="display:flex; align-items:center; gap:8px;"><span>${h.horas}h</span>
+    <button class="icon-btn" data-editar-hora="${h.id}" style="width:26px;height:26px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">${iconoSvg('edit')}</svg></button>
+    <button class="icon-btn" data-eliminar-hora="${h.id}" style="width:26px;height:26px;"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" width="12" height="12">${iconoSvg('trash')}</svg></button></div></li>`).join('')}</ul>`;
+}
+function abrirFormHoras(id){
+  const editando = !!id;
+  const h = editando ? STATE.registroHoras.find(x=>x.id===id) : {cliente:'', tarea:'', fecha:hoy(), horas:'', notas:''};
+  const nombresClientes = STATE.clientes.map(c=>c.marca);
+  abrirModal({
+    titulo: editando?'Editar registro de horas':'Cargar horas trabajadas',
+    cuerpoHTML:`
+      <div class="fila-campos">
+        <div class="campo"><label>Cliente <span class="req">*</span></label><input id="h_cliente" list="lista_clientes_h" value="${escapeHTML(h.cliente)}"><datalist id="lista_clientes_h">${nombresClientes.map(n=>`<option value="${escapeHTML(n)}">`).join('')}</datalist></div>
+        <div class="campo"><label>Tarea relacionada (opcional)</label><input id="h_tarea" value="${escapeHTML(h.tarea)}"></div>
+      </div>
+      <div class="fila-campos">
+        <div class="campo"><label>Fecha</label><input type="date" id="h_fecha" value="${h.fecha}"></div>
+        <div class="campo"><label>Horas <span class="req">*</span></label><input type="number" step="0.25" id="h_horas" value="${h.horas}"></div>
+      </div>
+      <div class="campo"><label>Notas</label><textarea id="h_notas">${escapeHTML(h.notas)}</textarea></div>
+    `,
+    footerHTML:`<button class="btn outline" id="btnCancelarHoras">Cancelar</button><button class="btn rosa" id="btnGuardarHoras">Guardar</button>`,
+    onAbrir:()=>{
+      document.getElementById('btnCancelarHoras').onclick = cerrarModal;
+      document.getElementById('btnGuardarHoras').onclick = ()=>{
+        const cliente = val('h_cliente'); const horas = Number(val('h_horas'));
+        if(!cliente || !horas){ toast('Cliente y horas son obligatorios','error'); return; }
+        const datos = {cliente, tarea:val('h_tarea'), fecha:val('h_fecha'), horas, notas:val('h_notas')};
+        if(editando) Object.assign(h, datos); else STATE.registroHoras.push({id:uid('hor'), ...datos});
+        cerrarModal(); marcarCambio(renderPagina); toast(editando?'Registro actualizado':'Horas registradas','exito');
+      };
+    }
+  });
+}
+
+/* ---------------------------------------------------------------------
    13. CONFIGURACIÓN
 --------------------------------------------------------------------- */
 function renderConfiguracion(root){
@@ -2105,7 +2994,11 @@ function renderDropdownNuevo(){
     {label:'Gasto', fn:()=>abrirFormGasto()},
     {label:'Presupuesto', fn:()=>abrirFormPresupuesto()},
     {label:'Tarea', fn:()=>abrirFormTarea()},
+    {label:'Evento', fn:()=>abrirFormEvento()},
     {label:'Servicio', fn:()=>abrirFormServicio()},
+    {label:'Producción', fn:()=>abrirFormProduccion()},
+    {label:'Contenido', fn:()=>abrirFormContenido()},
+    {label:'Registro de horas', fn:()=>abrirFormHoras()},
   ];
   const dd = document.getElementById('dropdownNuevo');
   dd.innerHTML = opciones.map((o,i)=>`<button data-op="${i}"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">${iconoSvg('plus')}</svg>${o.label}</button>`).join('');
